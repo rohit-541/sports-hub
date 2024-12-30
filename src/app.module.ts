@@ -9,7 +9,7 @@ import { MembershipModule } from './membership/membership.module';
 
 @Module({
   imports: [UserModule,MongooseModule.forRoot('mongodb://localhost:27017/sports-hub'), MemberShipCategeoryModule, MembershipModule],
-  controllers: [AppController, MembershipController ],
+  controllers: [AppController ],
   providers: [AppService],
 })
 export class AppModule {}
