@@ -7,6 +7,7 @@ import { MemberShip, MemberShipSchema } from './memberShip.Schema';
 import { MemberShipCategeory, MemberShipCategeorySchema } from 'src/member-ship-categeory/member-ship-schema';
 import { User, userSchema } from 'src/user/user.schema';
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaService } from 'src/prisma.service';
 
 @Module({
   imports:[MongooseModule.forFeature([

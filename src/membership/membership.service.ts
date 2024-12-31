@@ -6,19 +6,22 @@ import { ObjectId } from 'mongodb';
 import { User } from 'src/user/user.schema';
 import { MemberShipCategeory } from 'src/member-ship-categeory/member-ship-schema';
 import { start } from 'repl';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class MembershipService {
 
-    constructor(@InjectModel(MemberShip.name) private MembershipModel:Model<MemberShip>,
-     @InjectModel(User.name) private userModel:Model<User>,
-     @InjectModel(MemberShipCategeory.name) private memberShipCatModel:Model<MemberShipCategeory>
-){}
+    constructor(
+        @InjectModel(MemberShip.name) private MembershipModel:Model<MemberShip>,
+        @InjectModel(User.name) private userModel:Model<User>,
+        @InjectModel(MemberShipCategeory.name) private memberShipCatModel:Model<MemberShipCategeory>
+    ){}
 
     //Create a New Membership
     async createMemberShip(data:any,userId:string){
         //verify user
         const user = await this.userModel.findById(userId);
+
         if(!user){
             throw new BadRequestException("User not found!");
         }
