@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export class membershipdto{
     @IsNotEmpty()
-    memberShip:string;
+    membershipCategory:string;
 
     @IsNotEmpty()
     user:string;

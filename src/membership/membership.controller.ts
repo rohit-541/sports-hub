@@ -2,18 +2,14 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Req, U
 import { Role, Roles, RolesGuard } from 'src/user/roles.gaurd';
 import { MembershipService } from './membership.service';
 import { membershipdto } from './data.validation';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/user/user.schema';
-import { Model } from 'mongoose';
-import { MemberShipCategeory } from 'src/member-ship-categeory/member-ship-schema';
 import { AuthGuard } from 'src/Auth/auth.gaurd';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('membership')
 export class MembershipController {
 
     constructor(private membershipservice:MembershipService,
-        @InjectModel(User.name) private userModel:Model<User>,
-        @InjectModel(MemberShipCategeory.name) private memberShipCatModel:Model<MemberShipCategeory>
+                private jwtservice:JwtService
     ){}
 
     //Create a memberShip for user
@@ -59,19 +55,21 @@ export class MembershipController {
     @Get('/loginToken')
     async loginToken(@Req() req:any){
         const userId = req.userId;
-        const memberShipId = req.body.memberShip;
+        const memberShipId = req.body.memberShipId;
 
-        //verify user
+        try {
+            await this.membershipservice.loginToken(userId,memberShipId);
+            const token = this.jwtservice.signAsync({
+                userId:userId,
+                memberShipId:memberShipId
+            },{
+                secret:process.env.SECRETKEY,
+            });
 
-        //verify membership
-
-        //verify membership belongs to user
-
-        //generate a loginToken with userid and membershipid and expireTime(12h)
-        
-        //setMembership as active
-        
-        //return the token to user
+            return token
+        } catch (error) {
+            throw error;
+        }
     }
 
     //VerifyToken
@@ -79,21 +77,25 @@ export class MembershipController {
     @Roles(Role.Admin)
     @UseGuards(AuthGuard,RolesGuard)
     @Post('/verify')
-    async verifyToken(@Body() token:string){
-        //get token
+    async verifyToken(@Body() data:any){
 
-        //get the payload from security
-
-        //check expiry of token
+        const token:string = data.token;
+        let payload;
+        try {
+            //get the payload from security
+            payload = await this.jwtservice.verifyAsync(token,{
+                secret:process.env.SECRETKEY
+            });
+        } catch (error) {
+            throw new BadRequestException("Invalid Qr Code")
+        }
 
         //get Userid and membership id
-
+        const {userId , memberShipId} = payload;
         //verify presence of user and membership
-
-        //verify membership date with todayDate
-
+        const user = await this.membershipservice.verifyToken(userId,memberShipId);
         //provide details of user to staff with photo
-
+        return user;
     }
 
 

@@ -30,7 +30,5 @@ export enum Role {
 
 export const ROLES_KEY = 'roles'
 export const Roles = (...roles:Role[]) =>{
-    console.log("Decorator setting metadata")
     return SetMetadata(ROLES_KEY,roles)
-
 };

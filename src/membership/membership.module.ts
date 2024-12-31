@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MemberShip, MemberShipSchema } from './memberShip.Schema';
 import { MemberShipCategeory, MemberShipCategeorySchema } from 'src/member-ship-categeory/member-ship-schema';
 import { User, userSchema } from 'src/user/user.schema';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports:[MongooseModule.forFeature([
@@ -20,7 +21,13 @@ import { User, userSchema } from 'src/user/user.schema';
     {
       name:User.name,
       schema:userSchema
-    }])],
+    }]),JwtModule.register({
+      global:true,
+      secret:process.env.SECRETKEY,
+      signOptions:{
+        expiresIn:'12h'
+      }
+    })],
 
   controllers:[MembershipController],
   providers: [MembershipService]

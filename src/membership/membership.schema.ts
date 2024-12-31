@@ -9,8 +9,8 @@ export class MemberShip{
     user:mongoose.Types.ObjectId
     
     //membership
-    @Prop({type:mongoose.Types.ObjectId,ref:'membershipcategeory',required:true})
-    memberShip:mongoose.Types.ObjectId
+    @Prop({type:mongoose.Types.ObjectId,ref:'MemberShipCategeory',required:true})
+    membershipCategory:mongoose.Types.ObjectId
 
     //start
     @Prop({type:Date,required:true})
