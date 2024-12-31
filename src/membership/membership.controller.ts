@@ -21,28 +21,16 @@ export class MembershipController {
     @UseGuards(AuthGuard,RolesGuard)
     @Post('/create')
     @UsePipes(new ValidationPipe())
-    async createMemberShip(@Body() data:membershipdto){
-
-        //verify user
-        const user = await this.userModel.findById(data.user);
-        if(!user){
-            throw new BadRequestException("No userFound");
+    async createMemberShip(@Body() data:membershipdto,@Req() req:any){
+        try {
+            //try creating a user   
+            const userId = req.userId;
+            const user = await this.membershipservice.createMemberShip(data,userId);
+            //return user
+            return user;
+        } catch (error) {
+            throw error
         }
-
-        //verify membership
-        const memberShip = await this.memberShipCatModel.findById(data.memberShip);
-        if(!memberShip){
-            throw new BadRequestException("MemberShip categeory is invalid");
-        }
-
-        //pass to service
-        const newMembership = await this.membershipservice.createMemberShip(data);
-
-        //add this membership to userAccount
-         user.membership.push(memberShip._id);
-         await user.save();
-        //return membership
-        return newMembership;
     }   
 
     //Remove a membership
@@ -50,34 +38,17 @@ export class MembershipController {
     @Roles(Role.Admin)
     @UseGuards(AuthGuard,RolesGuard)
     @Delete('/:id')
-    async deleteMemberShip(@Param() id:string){
+    async deleteMemberShip(@Param('id') id:string){
         try {
             //delete the membership
             await this.membershipservice.deleteMemberShip(id);
             //return success 
             return {
                 success:true,
-                message:"Deleted Successfully"
+                message:"Deleted Membership successfully"
             }
         } catch (error) {
             throw error
-        }
-    }
-
-    //only admin
-    //delete expired memberships(run daily one time) from dataBase
-    @Roles(Role.Admin)
-    @UseGuards(AuthGuard,RolesGuard)
-    @Delete('/')
-    async removeExpired(){
-        try {
-            await this.membershipservice.deleteAllExpired();
-            return {
-                success:true,
-                message:"Deleted all expired memberships"
-            }
-        } catch (error) {
-            throw error;
         }
     }
 
