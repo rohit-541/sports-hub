@@ -31,6 +31,6 @@ import { PrismaService } from 'src/prisma.service';
     })],
 
   controllers:[MembershipController],
-  providers: [MembershipService]
+  providers: [MembershipService,PrismaService]
 })
 export class MembershipModule {}

@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//Temporary User
+model User{
+  id          Int         @default(autoincrement()) @id
+  name        String      
+  kerbrosId   String      @unique 
+  password    String
+  photo       String?
+  role        Role
+  memberships Membership[]
+}
+
+model Membership{
+  id            Int         @id @default(autoincrement())
+  name          names       
+  start         DateTime    @default(dbgenerated("CURRENT_DATE"))
+  end           DateTime    
+  kerbrosId     String      
+  photo         String 
+  userName      String     
+  tokens        String?
+  isActive      Boolean     @default(false)
+  User          User        @relation(fields: [kerbrosId],references: [kerbrosId],onDelete: Cascade,onUpdate: Cascade)
+} 
+
+enum names{
+  BadmintionMittal
+  SacGym
+  SacSwimmingPool
+}
+
+enum Role{
+  admin
+  user
+}
