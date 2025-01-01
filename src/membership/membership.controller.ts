@@ -141,7 +141,6 @@ export class MembershipController {
                 }
             );
 
-            console.log(payload);
             const {userId,memberShipId} = payload;
             await this.membershipservice.logoutUser(userId,memberShipId,token);
             return {

@@ -1,22 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Aggregate, model, Model } from 'mongoose';
-import { MemberShip } from './memberShip.Schema';
-import { ObjectId } from 'mongodb';
-import { User } from 'src/user/user.schema';
-import { MemberShipCategeory } from 'src/member-ship-categeory/member-ship-schema';
-import { start } from 'repl';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class MembershipService {
 
-    constructor(
-        @InjectModel(MemberShip.name) private MembershipModel:Model<MemberShip>,
-        @InjectModel(User.name) private userModel:Model<User>,
-        @InjectModel(MemberShipCategeory.name) private memberShipCatModel:Model<MemberShipCategeory>
-        ,private Prisma:PrismaService
-    ){}
+    constructor(private Prisma:PrismaService){}
 
     //Create a New Membership
     async createMemberShip(data:any,photo:string){
