@@ -131,12 +131,15 @@ export class MembershipController {
     @Roles(Role.Admin)
     @UseGuards(AuthGuard,RolesGuard)
     @Post('/logout')
-    async logoutuser(@Body() token:string){
+    async logoutuser(@Body() data:any){
+        const token:string = data.token;
         //Get the payload
         try {
-            const payload = await this.jwtservice.verifyAsync(token,{
-                secret:process.env.SECRETKEY
-            });
+            const payload = await this.jwtservice.verifyAsync(token,
+                {
+                    secret:process.env.SECRETKEY
+                }
+            );
 
             console.log(payload);
             const {userId,memberShipId} = payload;
