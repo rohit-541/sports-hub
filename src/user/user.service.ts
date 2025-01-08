@@ -2,24 +2,26 @@ import { Get, Inject, Injectable } from '@nestjs/common';
 import { User, userDoc } from './user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class UserService {
 
     //create userModel
-    constructor(@InjectModel(User.name) private userModel:Model<User>){}
+    constructor(private Prisma:PrismaService){}
 
     //createuser
     async createUser(userData:any){
-        const user = new this.userModel(userData);
-        await user.save();
-        return user;
+        const newuser = await this.Prisma.user.create({
+            data:{
+                name:"Rohit",
+                kerbros:"ce1230581"
+            }
+        });
+
+        return newuser;
     }
     
     async allUsers(){
-        const result = await this.userModel.find().select(['name','kerbrosId','photo','role','membership']).populate('membership');
-        return result;
     }
-
-
 }

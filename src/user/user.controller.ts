@@ -13,14 +13,7 @@ export class UserController {
     @UseInterceptors(FileInterceptor('image'))
     @UsePipes(new ValidationPipe())
     @Post('/register')
-    async registerUser(@Body() data:userDTO,@UploadedFile(
-        new ParseFilePipe({
-            validators:[
-                new MaxFileSizeValidator({maxSize:50000,message:"File size should be less than 50kb"})
-            ]
-        })
-    ) file:Express.Multer.File){
-        data.photo = file.buffer.toString('base64');
+    async registerUser(@Body() data:any){
         try {
             const newUser:any = await this.UserService.createUser(data);
             return  newUser;

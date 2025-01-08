@@ -5,7 +5,7 @@ export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     request.role = 'admin';  // This would be set by your actual authentication logic (e.g., JWT)
-    request.userId = request.body.user;
+    request.userId = 9;
     return true;
   }
 }
