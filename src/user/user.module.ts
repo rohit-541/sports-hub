@@ -8,7 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { PrismaService } from 'src/prisma.service';
 
 @Module({
-  imports:[MongooseModule.forFeature([{name:User.name,schema:userSchema}])],
+  imports:[],
   controllers:[UserController],
   providers: [UserService,PrismaService]
 })

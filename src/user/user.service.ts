@@ -13,10 +13,7 @@ export class UserService {
     //createuser
     async createUser(userData:any){
         const newuser = await this.Prisma.user.create({
-            data:{
-                name:"Rohit",
-                kerbros:"ce1230581"
-            }
+            data:userData
         });
 
         return newuser;

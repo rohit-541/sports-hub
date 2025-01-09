@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,17 +8,63 @@ datasource db {
 }
 
 model User {
-  id           Int           @default(autoincrement()) @id 
-  kerbros      String        @unique
-  name         String        
-  memberShips  Membership[]
+  id          Int           @id @default(autoincrement())
+  kerbros     String        @unique
+  name        String
+  memberships Membership[]
+  Teams       Team[]        @relation("UserTeams")
 }
 
-model Membership{
-  id              Int          @id @default(autoincrement())
-  membershipName  String       
-  start           DateTime     @default(dbgenerated("CURRENT_DATE"))
-  end             DateTime      
-  userId          Int
-  User            User?         @relation(fields: [userId],references: [id],onDelete: Cascade ,onUpdate: Cascade)
+model Membership {
+  id             Int       @id @default(autoincrement())
+  membershipName String
+  start          DateTime  @default(now())
+  end            DateTime
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+//All Players are registered for GC differently
+model Team{
+  id            Int       @id   @default(autoincrement())
+  hostel        Hostels 
+  score         Int       @default(0)
+  sport         Sports
+  Players       User[]    @relation("UserTeams")
+
+
+  //Relation between match and teams
+  Matches1       Match[]   @relation("Team1")
+  Matches2       Match[]   @relation("Team2")
+
+  @@unique([sport,hostel])
+}
+
+model Match{
+  id            Int         @id      @default(autoincrement())
+  team1         Int
+  team2         Int
+  winner        Int
+  status        Int
+  createdAt     DateTime    @default(now())
+  DateStart     DateTime    
+  DateEnd       DateTime
+  //relations
+  Team1         Team   @relation("Team1",fields: [team1],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  Team2         Team   @relation("Team2",fields: [team2],references: [id],onDelete: Cascade,onUpdate: Cascade)
+}
+
+//All Enums
+enum Hostels{
+  Aaravali
+  Karakoram
+  Nilgiri
+  Jawalamukhi
+}
+
+enum Sports{
+  Badmintion
+  Cricket
+  TableTennis
+  Swimming
 }
