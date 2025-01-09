@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Match" ALTER COLUMN "winner" DROP NOT NULL,
+ALTER COLUMN "createdAt" DROP NOT NULL;
