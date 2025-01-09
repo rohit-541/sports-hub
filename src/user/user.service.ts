@@ -30,9 +30,7 @@ export class UserService {
             select:{
                 id:true,
                 name:true,
-                kerbrosId:true,
-                photo:true,
-                role:true,
+                kerbros:true
             }
         })
         return result;
