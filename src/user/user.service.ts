@@ -12,13 +12,29 @@ export class UserService {
 
     //createuser
     async createUser(userData:any){
-        const newuser = await this.Prisma.user.create({
-            data:userData
-        });
 
-        return newuser;
+        try {
+            //create user in prisma
+            const newUser = await this.Prisma.user.create({
+                data:userData
+            });
+            return newUser;
+        } catch (error) {
+            console.log(error);
+            throw error
+        }
     }
     
     async allUsers(){
+        const result = await this.Prisma.user.findMany({
+            select:{
+                id:true,
+                name:true,
+                kerbrosId:true,
+                photo:true,
+                role:true,
+            }
+        })
+        return result;
     }
 }

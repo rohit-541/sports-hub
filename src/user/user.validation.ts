@@ -24,5 +24,16 @@ export class userDTO{
     @IsNotEmpty()
     role:string;
 
-    photo:string;
+    photo:string
 }
+
+
+/*
+    for user we require to pass information as 
+    {
+        name: string,
+        kerbrosId:string,
+        password:string,
+        role:'user' or 'admin'
+    }
+*/

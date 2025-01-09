@@ -1,9 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Req, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, MaxFileSizeValidator, Param, ParseFilePipe, Post, Req, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Role, Roles, RolesGuard } from 'src/user/roles.gaurd';
 import { MembershipService } from './membership.service';
 import { membershipdto } from './data.validation';
 import { AuthGuard } from 'src/Auth/auth.gaurd';
 import { JwtService } from '@nestjs/jwt';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 @Controller('membership')
 export class MembershipController {
@@ -13,6 +15,7 @@ export class MembershipController {
     ){}
 
     //Create a memberShip for user
+    @UseInterceptors(FileInterceptor('image'))
     @Roles(Role.Admin)
     @UseGuards(AuthGuard,RolesGuard)
     @Post('/create')
@@ -24,7 +27,11 @@ export class MembershipController {
             const memberShip = await this.membershipservice.createMemberShip(data,userId);
             //return user
             return memberShip;
+            return memberShip;
         } catch (error) {
+            if(error instanceof PrismaClientValidationError){
+                throw new BadRequestException("Invalid data format Please look into correct Data Format");
+            }
             throw error
         }
     }   
