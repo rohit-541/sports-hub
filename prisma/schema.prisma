@@ -122,10 +122,12 @@ model Round{
   name        String
   matchId     Int
   Match       Match           @relation(fields: [matchId],references: [id],onDelete: Cascade,onUpdate: Cascade)
-  scoreA      Int
-  scoreB      Int
-  winnerId    Int
-  winner      Team            @relation(fields: [winnerId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  scoreA      Int?
+  scoreB      Int?
+  winnerId    Int?
+  winner      Team?            @relation(fields: [winnerId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+
+  @@unique([name,matchId])
 }
 
 enum Sports {

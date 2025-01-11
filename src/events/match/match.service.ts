@@ -282,6 +282,18 @@ export class MatchService {
         return result;
     }
 
+    //Get all round corresponding to a round
+    async allRounds(matchId:number){
+        const result = await this.prisma.round.findMany({
+            where:{
+                matchId:matchId
+            }
+        });
+
+        return result;
+    }
+
+
     //Set the winner of round
     async createRoundWinner(roundId:number,winnerId:number){
         const result = await this.prisma.round.update({

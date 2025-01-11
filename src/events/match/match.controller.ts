@@ -255,9 +255,7 @@ export class MatchController {
 
     }
 
-
     //Rounds
-
     //Create a round
     @Post('/round/')
     async createRound(@Body() data:any){
@@ -269,6 +267,17 @@ export class MatchController {
                 round:result
             }
         } catch (error) {
+
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2003"){
+                    throw new BadRequestException("Match does not exist");
+                }
+
+                if(error.code == "P2002"){
+                    throw new BadRequestException("Round with these details already exist");
+                }
+            }
+
             throw error;
         }
     }
@@ -290,6 +299,11 @@ export class MatchController {
                 message:"Rounded Deleted Successfully"
             }
         } catch (error) {
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == 'P2025'){
+                    throw new BadRequestException("No Round with following id found");
+                }
+            }
             throw error;
         }
     }
@@ -305,12 +319,49 @@ export class MatchController {
 
         try {
             const result = await this.matchService.updateRound(roundId,data);
-
             return {
                 success:true,
                 message:"Updated Successfully"
             }
         } catch (error) {
+
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == 'P2025'){
+                    throw new BadRequestException("No Round with following id found");
+                }
+
+                if(error.code == "P2002"){
+                    throw new BadRequestException("Round with these details already exist");
+                }   
+            }
+
+            if(error instanceof PrismaClientValidationError){
+                throw new BadRequestException("Invalid data format");
+            }
+            throw error;
+        }
+    }
+
+    @Get('/round/all/:id')
+    async allRound(@Param('id') id:number){
+        const matchId = Number(id);
+
+        if(!matchId){
+            throw new BadRequestException("Invalid Match Id");
+        }
+
+        try {
+            const result = await this.matchService.allRounds(matchId);
+
+            return {
+                success:true,
+                rounds:result
+            }
+        } catch (error) {
+            if(error instanceof PrismaClientKnownRequestError){
+                throw new BadRequestException("No Match with this Id found");
+            }
+
             throw error;
         }
     }
@@ -326,6 +377,11 @@ export class MatchController {
 
         try {
             const result = await this.matchService.roundDetails(roundId);
+            
+            if(!result){
+                throw new BadRequestException("No round with this Id found");
+            }
+
             return{
                 success:true,
                 Round:result
@@ -335,7 +391,7 @@ export class MatchController {
         }
     }
     //Set the winner of round
-    @Put('/round/winner/:id')
+    @Post('/round/winner/:id')
     async setWinner(@Param('id') id:number,@Body() data:any){
         const roundId = Number(id);
 
@@ -345,13 +401,26 @@ export class MatchController {
         
         const winnerId = Number(data.winnerId);
 
-        if(!roundId){
+        if(!winnerId){
             throw new BadRequestException("Invalid winner Id");
         }
 
         try {
             const result = await this.matchService.createRoundWinner(roundId,winnerId);
+            return {
+                success:true,
+                message:"Winner Set Successfully"
+            }
         } catch (error) {
+            console.log(error);
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2003"){
+                    throw new BadRequestException("No Team with this Id exists");
+                }
+                if(error.code == "P2025"){
+                    throw new BadRequestException("No Round with this id exists");
+                }
+            }
             throw error;
         }
     }
@@ -368,9 +437,20 @@ export class MatchController {
             const result = await this.matchService.updateRoundScore(roundId,data);
             return{
                 success:true,
-                winner:result
+                message:"Score Updated Successfully"
             }
         } catch (error) {
+
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2025"){
+                    throw new BadRequestException("No Round found with this Id");
+                }
+            }
+
+            if(error instanceof PrismaClientValidationError){
+                throw new BadRequestException("Invalid data format");
+            }
+
             throw error
         }
     }
@@ -385,6 +465,9 @@ export class MatchController {
 
         try {
             const result = await this.matchService.winnerRound(roundId);
+            if(!result){
+                throw new BadRequestException("No Round with this Id exists");
+            }
             return{
                 success:true,
                 winner:result
