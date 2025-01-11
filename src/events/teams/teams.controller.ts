@@ -14,6 +14,7 @@ export class TeamsController {
     //Create a team
     async createTeam(@Body() data:teamDto){
         try {
+            console.log(data);
             const newTeam = await this.teamsService.createTeam(data);
             return newTeam;
         } catch (error) {

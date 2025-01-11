@@ -8,6 +8,7 @@ export class TeamsService {
 
     //Create a team
     createTeam = async(data:any)=>{
+        console.log(data);
         const newTeam = await this.prisma.team.create({
             data:data
         });
