@@ -13,16 +13,20 @@ class IsType implements ValidatorConstraintInterface {
     if(sport == "Badminton"){
       if(BadmintonType.includes(type)){
         return true;
+      }else{
+        return false;
       }
     }
 
     if(sport == "Atheletics"){
       if(AtheleticsTypes.includes(type)){
         return true;
+      }else{
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -57,6 +61,9 @@ export class MatchDto{
 
     @IsNotEmpty()
     location:String
+
+    @IsNotEmpty()
+    CategeoryID:number
 
 }
 

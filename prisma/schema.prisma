@@ -45,14 +45,15 @@ model Team {
   sport       Sports
   sportsType  sportType?     
   players     User[]         @relation("PlayerTeam")  
-  score       Int     //To count match won by them in categeory
+  score       Int?     //To count match won by them in categeory
+  
   //Relations
   hostel      Hostel         @relation("HostelTeam",fields: [hostelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   matches1    Match[]        @relation("Team1")
   matches2    Match[]        @relation("Team2")
   winner      Match[]        @relation("WinnerTeam")
   winnerPool  Categeory[]    @relation("poolWinner")
-  pool        Categeory[]        @relation("PoolTeam")
+  pool        Categeory[]    @relation("PoolTeam")
 }
 
 
@@ -66,6 +67,8 @@ model Categeory {
   teams       Team[]         @relation("PoolTeam")
   winners     Team[]         @relation("poolWinner")           
   matches     Match[]        @relation("poolMatches")
+
+  @@unique([sport,name])
 }
 
 
@@ -82,7 +85,7 @@ model Match {
 
   //Sports
   sport       Sports
-  sportType   sportType
+  sportType   sportType?
   //Winner
   winnerId    Int?
 

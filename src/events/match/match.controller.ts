@@ -31,7 +31,7 @@ export class MatchController {
             console.log(error);
             if(error instanceof PrismaClientKnownRequestError){
                 if(error.code == "P2003"){
-                    throw new BadRequestException("Please Check TeamID");
+                    throw new BadRequestException("Please Check Ids");
                 }
             }
 
