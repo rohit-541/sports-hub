@@ -59,7 +59,12 @@ export class MatchService {
                 dateEnd:true,
                 winner:true,
                 longitude:true,
-                latitude:true
+                latitude:true,
+                location:true,
+                pool:true,
+                scoreA:true,
+                type:true,
+                scoreB:true,
             }
         });
 
@@ -74,7 +79,8 @@ export class MatchService {
             },
             select:{
                 longitude:true,
-                latitude:true
+                latitude:true,
+                location:true
             }
         });
 
@@ -85,7 +91,8 @@ export class MatchService {
     winnerMatch = async(matchId:number)=>{
         const result = await this.prisma.match.findUnique({
             where:{
-                id:matchId
+                id:matchId,
+                status:"Completed"
             },
             select:{
                 winner:true
@@ -203,6 +210,9 @@ export class MatchService {
             }
         });
 
+        const team = await this.teamsService.updateScore(winnerId,1);
+
+
         return result;
     }
 
@@ -218,8 +228,8 @@ export class MatchService {
                 id:matchId
             },
             data:{
-                scoreA:data.scoreA,
-                scoreB:data.scoreB
+                scoreA:Number(data.scoreA),
+                scoreB:Number(data.scoreB)
             }
         });
 

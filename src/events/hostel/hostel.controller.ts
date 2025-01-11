@@ -1,5 +1,6 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
 import { HostelService } from './hostel.service';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 @Controller('hostel')
 export class HostelController {
@@ -20,8 +21,17 @@ export class HostelController {
                         Hostel:newHostel
                     }
         } catch (error) {
-            console.log(error);
-            console.log(error.code);
+            if(error instanceof PrismaClientValidationError){
+                throw new BadRequestException("Invalid Data");
+            }
+            
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2002"){
+                    throw new BadRequestException("Hostel already exists");
+                }
+            }
+
+            throw new InternalServerErrorException("Something went Wrong");
         }
     }
 

@@ -22,7 +22,7 @@ export class CategeoryController {
              }
              if(error instanceof PrismaClientValidationError){
                 console.log(error);
-                throw new BadRequestException("Invalid Team data");
+                throw new BadRequestException("Invalid Categeory data");
              }
         }
     }
@@ -100,7 +100,10 @@ export class CategeoryController {
     //Create Winner
     @Post('/winner/:id')
     async createWinner(@Body() data:any,@Param('id') id:number){
-        const winners = data.winner;    
+        const winners = data.winner;  
+        if(!winners){
+            throw new BadRequestException("Please provide valid data");
+        }  
         const catId = Number(id);
 
         if(!catId){
@@ -114,7 +117,7 @@ export class CategeoryController {
                 winners:result
             }
         } catch (error) {
-            throw error;
+            console.log(error);
         }
     }
     //winner

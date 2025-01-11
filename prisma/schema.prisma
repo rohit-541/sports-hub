@@ -55,6 +55,8 @@ model Team {
   winnerPool  Categeory[]    @relation("poolWinner")
   pool        Categeory[]    @relation("PoolTeam")
   rounds      Round[]
+
+  @@unique([sport,hostelId])
 }
 
 
@@ -90,8 +92,8 @@ model Match {
   winnerId    Int?
 
   //Scores Stored as Object
-  scoreA      Int?
-  scoreB      Int?
+  scoreA      Int?          @default(0)
+  scoreB      Int?          @default(0)
 
   //Status
   status      MatchStatus    @default(Scheduled)
@@ -136,21 +138,23 @@ enum Sports {
   Hockey
   Athletics
   Squash
+  Weightlifting
 }
 
 enum Hostels {
-  Aaravali
+  Aravali
   Karakoram
   Nilgiri
-  Jawalamukhi
+  Jwalamukhi
   Kumaon
   Satpura
-  Udaygiri
+  Udaigiri
   Dronagiri
   Vindyanchal
   Shivalik
   Saptagiri
   Zanskar
+  Girnar
 }
 
 //OpenCategeory->Wieght Lifting etc
@@ -177,4 +181,5 @@ enum sportType{
   l100
   l200
   l1500
+  l400
 }

@@ -56,7 +56,7 @@ export class MatchDto{
     @IsNotEmpty()
     sport:String
 
-    @Validate(IsType)
+    // @Validate(IsType)
     sportType:String;
 
     @IsNotEmpty()
@@ -65,27 +65,33 @@ export class MatchDto{
     @IsNotEmpty()
     CategeoryID:number
 
+    @IsNotEmpty()
+    type:string
+
 }
 
 
 export class updateDto{
+    
+    //Procedure of adding winner is different
     @IsEmpty()
     winner:number
 
+    //If these are wrong create a New match
     @IsEmpty()
-    status:number
-
-    @IsEmpty()
-    team1:number
+    team1Id:number
 
     @IsEmpty()
-    team2:number
+    team2Id:number
 
-    DateStart:Date
-    DateEnd:Date
+    dateStart:Date
+    
+    dateEnd:Date
 
+    location:string
     longitude:number
     latitude:number
+    
 }
 
 export class winnerDto{

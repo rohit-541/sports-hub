@@ -17,7 +17,11 @@ export class TeamsController {
             const newTeam = await this.teamsService.createTeam(data);
             return newTeam;
         } catch (error) {
+            console.log(error);
              if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2003"){
+                    throw new BadRequestException("Hostel Does not exists");
+                }
                 throw new BadRequestException("Can not add duplicate Team");
              }
              if(error instanceof PrismaClientValidationError){
@@ -46,31 +50,6 @@ export class TeamsController {
         }
     }
 
-    //update Score of a team
-    // @Put('/score/:id')
-    // async updateScore(@Param() idData:any,@Body() scoreData:scoreDto){
-    //     const teamId:number = Number(idData.id);
-
-    //     if(!teamId){
-    //         throw new BadRequestException("Invalid Team Id");
-    //     }
-    //     try {
-    //         const newScore:number = scoreData.score;
-    //         const updatedTeam = await this.teamsService.updateScore(teamId,newScore);
-    
-    //         return {
-    //             success:true,
-    //             message:"Updated Successfully",
-    //             updatedTeam:updatedTeam
-    //         }
-    //     } catch (error) {
-    //         if(error instanceof PrismaClientKnownRequestError){
-    //             if(error.code == "P2025"){
-    //                 throw new BadRequestException("Team with this id not found");
-    //             }
-    //         }
-    //     }
-    // }
     //update details of team
     @Put('/update/:id')
     async updateTeam(@Param() params:any,@Body() data:updateDto){
@@ -92,11 +71,15 @@ export class TeamsController {
                     throw new BadRequestException("Can not add duplicate Team");
                 }else if(error.code =="P2025"){
                     throw new BadRequestException("Team with this id not found");
+                }else if(error.code == "P2003"){
+                    throw new BadRequestException("Hostel with this id not found");
                 }
             }
             if(error instanceof PrismaClientValidationError){
                 throw new BadRequestException("Invalid Team data")
             }
+            console.log(error.code);
+            throw error;
         }
 
     }
@@ -138,6 +121,37 @@ export class TeamsController {
             throw error            
         }
     }
+
+    @Put('/score/:id')
+    async updateScore(@Body() data:any,@Param('id') id:number){
+        const score = Number(data.score);
+
+        if(!score){
+            throw new BadRequestException("Invalid Scores");
+        }
+
+        const teamId = Number(id);
+        if(!teamId){
+            throw new BadRequestException("Invalid Team Id");
+        }
+
+        try {
+            const result = await this.teamsService.updateScore(teamId,score);
+
+            return {
+                success:true,
+                "message":"Score Updated Successfully"
+            }
+        } catch (error) {
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2025"){
+                    throw new BadRequestException("The Team not found");
+                }
+            }
+        }
+    }
+
+
 
 
     //Players

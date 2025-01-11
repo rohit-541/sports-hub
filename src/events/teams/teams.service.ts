@@ -28,19 +28,21 @@ export class TeamsService {
         }
     }
 
-    // //update team scores
-    // updateScore = async(teamsId:number,newScore:number)=>{
-    //     const updateTeam = await this.prisma.team.update({
-    //         where:{
-    //             id:teamsId
-    //         },
-    //         data:{
-    //             :newScore
-    //         }
-    //     });
+    //update team scores
+    updateScore = async(teamsId:number,newScore:number)=>{
+        console.log(newScore);
+        const updateTeam = await this.prisma.team.update({
+            where:{
+                id:teamsId
+            },
+            data:{
+                score:newScore
+            }
+        });
 
-    //     return updateTeam;
-    // }
+        console.log(updateTeam);
+        return updateTeam;
+    }
 
     //update team details
     updateTeamDetails = async(teamId:number,data:any)=>{
@@ -58,13 +60,25 @@ export class TeamsService {
         const team = await this.prisma.team.findUnique({
             where:{
                 id:teamId
+            },
+            select:{
+                sport:true,
+                sportsType:true,
+                hostel:true,
             }
         });
         return team;
     }
 
     allTeams = async()=>{
-        const result = await this.prisma.team.findMany();
+        const result = await this.prisma.team.findMany({
+            select:{
+                hostel:true,
+                sport:true,
+                sportsType:true,
+                players:true
+            }
+        });
         return result;
     }
 

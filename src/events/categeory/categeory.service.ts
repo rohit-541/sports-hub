@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
+import { TeamsService } from '../teams/teams.service';
 
 @Injectable()
 export class CategeoryService {
 
-    constructor(private prisma:PrismaService){}
+    constructor(private prisma:PrismaService,
+        private teamService:TeamsService
+    ){}
 
     //Create a Categeory
     async createCategeory(data:any){
@@ -56,18 +59,29 @@ export class CategeoryService {
     }
 
     //Create/Update a Winner of Categeory
-    async createWinner(catId:number,winners:number[]){
+    async createWinner(catId:number,winners:any[]){
         const result = await this.prisma.categeory.update({
             where:{
                 id:catId
             },
             data:{
                 winners:{
-                    set:winners.map((id)=>({id}))
-                }
-            }
+                    set:winners.map(id=>({
+                        id    
+                    }))
+                },
+            },
+            select:{
+                winners:true,
+                sport:true,
+            },
         });
 
+        
+        winners.forEach(async (winner,index)=>{           
+            await this.teamService.updateScore(winner,index*100);
+        })
+        
         return result;
     }
 
@@ -80,8 +94,13 @@ export class CategeoryService {
             select:{
                 name:true,
                 sport:true,
-                winners:true,
-            }
+                winners:{
+                    orderBy:{
+                        score:'asc'
+                    }
+                },
+            },
+            
         });
 
         return result;

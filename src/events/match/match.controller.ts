@@ -77,16 +77,17 @@ export class MatchController {
             throw new BadRequestException("Invalid Match Id");
         }
 
-        if(data.DateStart){
-            data.DateStart = new Date(data.DateStart);
+        if(data.dateStart){
+            data.dateStart = new Date(data.dateStart);
         }
-        if(data.DateEnd){
-            data.DateEnd = new Date(data.DateEnd);
+        if(data.dateEnd){
+            data.dateEnd = new Date(data.dateEnd);
         }
 
-        if(data.DateStart && data.DateEnd && data.DateStart > data.DateEnd){
+        if(data.dateStart && data.dateEnd && data.dateStart > data.dateEnd){
             throw new BadRequestException("End Date cannot be in Past");
         }
+
 
         try {
             const updatedMatch = await this.matchService.updateMatch(matchId,data);
@@ -95,6 +96,7 @@ export class MatchController {
                 updatedMatch:updatedMatch
             }
         } catch (error) {
+            console.log(error);
             if(error instanceof PrismaClientKnownRequestError){
                 if(error.code == "P2025"){
                     throw new BadRequestException("Match with this id not found");
@@ -144,7 +146,7 @@ export class MatchController {
 
         const result = await this.matchService.winnerMatch(matchId);
         if(!result){
-            throw new BadRequestException("No Match with this Id found!");
+            throw new BadRequestException("No Completed Match with this Id found!");
         }
 
         return{
@@ -243,7 +245,11 @@ export class MatchController {
                 "Message":"Score Updated Successfully"
             }
         } catch (error) {
-            throw error;
+           if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2025"){
+                    throw new BadRequestException("No Match with this Id found");
+                }
+           }
         }
 
 
