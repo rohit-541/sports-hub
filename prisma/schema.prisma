@@ -54,6 +54,7 @@ model Team {
   winner      Match[]        @relation("WinnerTeam")
   winnerPool  Categeory[]    @relation("poolWinner")
   pool        Categeory[]    @relation("PoolTeam")
+  rounds      Round[]
 }
 
 
@@ -67,7 +68,6 @@ model Categeory {
   teams       Team[]         @relation("PoolTeam")
   winners     Team[]         @relation("poolWinner")           
   matches     Match[]        @relation("poolMatches")
-
   @@unique([sport,name])
 }
 
@@ -105,11 +105,25 @@ model Match {
   longitude   Float?         @default(77.18893289553354)
   location    String         @default("Cricket Ground")
 
+  //Rounds
+  rounds      Round[]        
+
   //Relations
   team1       Team           @relation("Team1", fields: [team1Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   team2       Team           @relation("Team2", fields: [team2Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   winner      Team?          @relation("WinnerTeam", fields: [winnerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   pool        Categeory      @relation("poolMatches", fields: [CategeoryID], references: [id])
+}
+
+model Round{
+  id          Int            @id @default(autoincrement())
+  name        String
+  matchId     Int
+  Match       Match           @relation(fields: [matchId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  scoreA      Int
+  scoreB      Int
+  winnerId    Int
+  winner      Team            @relation(fields: [winnerId],references: [id],onDelete: Cascade,onUpdate: Cascade)
 }
 
 enum Sports {

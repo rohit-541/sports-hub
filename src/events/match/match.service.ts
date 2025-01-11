@@ -227,4 +227,86 @@ export class MatchService {
         return result;
     }
 
+     //Rounds
+
+    //Create a round
+    async createRound(data:any){
+        const newRound = await this.prisma.round.create({
+            data:data
+        });
+        
+        return newRound;
+    }
+
+    //delete a round
+    async deleteRound(roundId:number){
+        const result = await this.prisma.round.delete({
+            where:{
+                id:roundId
+            }
+        });
+
+        return result
+    }
+
+    //Update a round
+    async updateRound(roundId:number,data:any){
+        const result = await this.prisma.round.update({
+            where:{
+                id:roundId
+            },
+            data:data,
+        }); 
+
+        return result;
+    }
+
+    //Get details of a round
+    async roundDetails(roundId:number){
+        const result = await this.prisma.round.findUnique({
+            where:{
+                id:roundId
+            }
+        });
+
+        return result;
+    }
+
+    //Set the winner of round
+    async createRoundWinner(roundId:number,winnerId:number){
+        const result = await this.prisma.round.update({
+            where:{
+                id:roundId
+            },
+            data:{
+                winnerId:winnerId
+            }
+        });
+
+        return result;
+    }
+
+    //Update the score of the round
+    async updateRoundScore(roundId:number,scoreData:any){
+        const result = await this.prisma.round.update({
+            where:{
+                id:roundId
+            },
+            data:scoreData
+        });
+
+        return result
+    }
+
+    //Get the winner of round
+    async winnerRound(roundId:number){
+        const result = await this.prisma.round.findUnique({
+            where:{
+                id:roundId
+            }
+        });
+
+        return result;
+    }
+
 }

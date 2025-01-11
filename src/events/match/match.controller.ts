@@ -4,6 +4,7 @@ import { MatchDto, ScoreDto, updateDto, winnerDto } from './Data-Validation';
 import { MatchService } from './match.service';
 import { format } from 'path';
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
+import { truncate } from 'fs';
 
 
 @UseGuards(AuthGuard)
@@ -248,4 +249,142 @@ export class MatchController {
 
     }
 
+
+    //Rounds
+
+    //Create a round
+    @Post('/round/')
+    async createRound(@Body() data:any){
+        try {
+            const result = await this.matchService.createRound(data);
+
+            return {
+                success:true,
+                round:result
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    @Delete('/round/:id')
+    //delete a round
+    async deleteRound(@Param('id') id:number){
+        const roundId = Number(id);
+        
+        if(!roundId){
+            throw new BadRequestException("Invlaid Round Id");
+        }
+
+        try {
+            const result = await this.matchService.deleteRound(roundId);
+
+            return {
+                success:true,
+                message:"Rounded Deleted Successfully"
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    //Update a round
+    @Put('/round/:id')
+    async updateRound(@Body() data:any,@Param('id') id:number){
+        const roundId = Number(id);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid Round Id");
+        }
+
+        try {
+            const result = await this.matchService.updateRound(roundId,data);
+
+            return {
+                success:true,
+                message:"Updated Successfully"
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    //Get details of a round
+    @Get('/round/:id')
+    async roundDetails(@Param('id') id:number){
+        const roundId = Number(id);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid Round Id");
+        }
+
+        try {
+            const result = await this.matchService.roundDetails(roundId);
+            return{
+                success:true,
+                Round:result
+            }
+        } catch (error) {
+            throw error;            
+        }
+    }
+    //Set the winner of round
+    @Put('/round/winner/:id')
+    async setWinner(@Param('id') id:number,@Body() data:any){
+        const roundId = Number(id);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid Round Id");
+        }
+        
+        const winnerId = Number(data.winnerId);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid winner Id");
+        }
+
+        try {
+            const result = await this.matchService.createRoundWinner(roundId,winnerId);
+        } catch (error) {
+            throw error;
+        }
+    }
+    //Update the score of the round
+    @Put('/round/score/:id')
+    async setScore(@Param('id') id:number,@Body() data:any){
+        const roundId = Number(id);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid Round Id");
+        }
+
+        try {
+            const result = await this.matchService.updateRoundScore(roundId,data);
+            return{
+                success:true,
+                winner:result
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+    //Get the winner of round
+    @Get('/round/winner/:id')
+    async roundWinner(@Param('id') id:number){
+        const roundId = Number(id);
+
+        if(!roundId){
+            throw new BadRequestException("Invalid Round Id");
+        }
+
+        try {
+            const result = await this.matchService.winnerRound(roundId);
+            return{
+                success:true,
+                winner:result
+            }
+        } catch (error) {
+            throw error
+        }
+    }
 }
