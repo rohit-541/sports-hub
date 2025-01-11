@@ -28,19 +28,19 @@ export class TeamsService {
         }
     }
 
-    //update team scores
-    updateScore = async(teamsId:number,newScore:number)=>{
-        const updateTeam = await this.prisma.team.update({
-            where:{
-                id:teamsId
-            },
-            data:{
-                score:newScore
-            }
-        });
+    // //update team scores
+    // updateScore = async(teamsId:number,newScore:number)=>{
+    //     const updateTeam = await this.prisma.team.update({
+    //         where:{
+    //             id:teamsId
+    //         },
+    //         data:{
+    //             :newScore
+    //         }
+    //     });
 
-        return updateTeam;
-    }
+    //     return updateTeam;
+    // }
 
     //update team details
     updateTeamDetails = async(teamId:number,data:any)=>{
@@ -77,14 +77,14 @@ export class TeamsService {
                 id:teamsId
             },
             data:{
-                Players:{
+                players:{
                     connect:[
                         {id:playerId}
                     ]
                 }
             },
             select:{
-                Players:true
+                players:true
             }
         });
 
@@ -102,14 +102,14 @@ export class TeamsService {
                 id:teamId
             },
             data:{
-                Players:{
+                players:{
                     disconnect:[
                         {id:playerId}
                     ]
                 }
             },
             select:{
-                Players:true
+                players:true
             }
         });
 
@@ -127,10 +127,11 @@ export class TeamsService {
                 id:teamId
             },
             select:{
-                Players:true
+                players:true
             }
         });
 
         return result;
     }
+
 }

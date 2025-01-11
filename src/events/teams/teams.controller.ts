@@ -47,30 +47,30 @@ export class TeamsController {
     }
 
     //update Score of a team
-    @Put('/score/:id')
-    async updateScore(@Param() idData:any,@Body() scoreData:scoreDto){
-        const teamId:number = Number(idData.id);
+    // @Put('/score/:id')
+    // async updateScore(@Param() idData:any,@Body() scoreData:scoreDto){
+    //     const teamId:number = Number(idData.id);
 
-        if(!teamId){
-            throw new BadRequestException("Invalid Team Id");
-        }
-        try {
-            const newScore:number = scoreData.score;
-            const updatedTeam = await this.teamsService.updateScore(teamId,newScore);
+    //     if(!teamId){
+    //         throw new BadRequestException("Invalid Team Id");
+    //     }
+    //     try {
+    //         const newScore:number = scoreData.score;
+    //         const updatedTeam = await this.teamsService.updateScore(teamId,newScore);
     
-            return {
-                success:true,
-                message:"Updated Successfully",
-                updatedTeam:updatedTeam
-            }
-        } catch (error) {
-            if(error instanceof PrismaClientKnownRequestError){
-                if(error.code == "P2025"){
-                    throw new BadRequestException("Team with this id not found");
-                }
-            }
-        }
-    }
+    //         return {
+    //             success:true,
+    //             message:"Updated Successfully",
+    //             updatedTeam:updatedTeam
+    //         }
+    //     } catch (error) {
+    //         if(error instanceof PrismaClientKnownRequestError){
+    //             if(error.code == "P2025"){
+    //                 throw new BadRequestException("Team with this id not found");
+    //             }
+    //         }
+    //     }
+    // }
     //update details of team
     @Put('/update/:id')
     async updateTeam(@Param() params:any,@Body() data:updateDto){
@@ -210,7 +210,7 @@ export class TeamsController {
         }
         return{
             success:true,
-            players:result.Players
+            players:result.players
         }
     }
 

@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/Auth/auth.gaurd';
-import { MatchDto, updateDto, winnerDto } from './Data-Validation';
+import { MatchDto, ScoreDto, updateDto, winnerDto } from './Data-Validation';
 import { MatchService } from './match.service';
 import { format } from 'path';
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
@@ -16,18 +16,19 @@ export class MatchController {
     @Post('/')
     async createMatch(@Body() data:MatchDto){
         try {
-            const startDate = new Date(data.DateStart);
-            const endDate = new Date(data.DateEnd);
+            const startDate = new Date(data.dateStart);
+            const endDate = new Date(data.dateEnd);
 
             if(startDate > endDate){
                 throw new BadRequestException("End Date cannot be in Past");
             }
             
-            data.DateStart = startDate;
-            data.DateEnd = endDate;
+            data.dateStart = startDate;
+            data.dateEnd = endDate;
             const newMatch = await this.matchService.createMatch(data);
             return newMatch;
         } catch (error) {
+            console.log(error);
             if(error instanceof PrismaClientKnownRequestError){
                 if(error.code == "P2003"){
                     throw new BadRequestException("Please Check TeamID");
@@ -37,6 +38,8 @@ export class MatchController {
             if(error instanceof PrismaClientValidationError){
                 throw new BadRequestException("Invalid Structure of Data");
             }
+
+            throw error;
         }
 
     }
@@ -122,7 +125,7 @@ export class MatchController {
             const result = await this.matchService.createWinner(matchId,winnerId);
             return {
                 success:true,
-                winner:result.WinnerTeam  
+                winner:result  
             }
         } catch (error) {
             throw error
@@ -145,9 +148,10 @@ export class MatchController {
 
         return{
             success:true,
-            winner:result.WinnerTeam
+            winner:result.winner
         }
     }
+
     //get match details
     @Get('/:id')
     async matchDetails(@Param() params:any){
@@ -158,7 +162,7 @@ export class MatchController {
         }
 
         try {
-            const result = await this.matchService.matchDetails (matchId);
+            const result = await this.matchService.matchDetails(matchId);
 
             if(!result){
                 throw new BadRequestException("No Match with this Id found!");
@@ -188,7 +192,7 @@ export class MatchController {
     @Get('/matches/live')
     async liveMatch(@Body() data:any){
         const n:number = Number(data.n) || 2;
-        const result = await this.matchService.liveMatches(n);
+        const result = await this.matchService.liveMatches();
         return {
             success:true,
             matches:result
@@ -222,4 +226,26 @@ export class MatchController {
             location:result
         };
     }
+
+    @Put('/score/:id')
+    async updateScore(@Body() data:ScoreDto,@Param('id') id:number){
+        const matchId:number = Number(id);
+
+        if(!matchId){
+        throw new BadRequestException("Invalid Match Id");
+        }
+
+        try {
+            const updatedScore = await this.matchService.updateScore(matchId,data);
+            return {
+                success:true,
+                "Message":"Score Updated Successfully"
+            }
+        } catch (error) {
+            throw error;
+        }
+
+
+    }
+
 }

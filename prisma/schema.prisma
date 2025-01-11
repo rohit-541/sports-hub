@@ -7,68 +7,157 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//To maintain Users
 model User {
   id          Int           @id @default(autoincrement())
   kerbros     String        @unique
   name        String
-  memberships Membership[]
-  Teams       Team[]        @relation("UserTeams")
+
+  //Relations
+  teams       Team[]        @relation("PlayerTeam")
 }
 
-model Membership {
-  id             Int       @id @default(autoincrement())
-  membershipName String
-  start          DateTime  @default(now())
-  end            DateTime
-  userId         Int
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+//To Maintain GC POINTS
+
+model GamePoint{
+  id            Int           @id   @default(autoincrement())
+  name          Sports
+  points        Int           @default(0)
+  hostelId      Int
+  Hostel        Hostel        @relation(fields: [hostelId],references: [id],onDelete: Cascade,onUpdate: Cascade)        
 }
 
-//All Players are registered for GC differently
-model Team{
-  id            Int       @id   @default(autoincrement())
-  hostel        Hostels 
-  score         Int       @default(0)
-  sport         Sports
-  Players       User[]    @relation("UserTeams")
-
-
-  //Relation between match and teams
-  Matches1       Match[]   @relation("Team1")
-  Matches2       Match[]   @relation("Team2")
-  Winner         Match[]   @relation("WinnerTeam")
-  @@unique([sport,hostel])
-}
-
-model Match{
-  id            Int         @id      @default(autoincrement())
-  team1         Int
-  team2         Int
-  winner        Int?
-  status        Int         @default(1)
-  createdAt     DateTime?    @db.Timestamp @default(now())
-  DateStart     DateTime    @db.Timestamp
-  DateEnd       DateTime    @db.Timestamp
-  latitude      Float       @default(28.5444201360911)
-  longitude     Float       @default(77.18893289553354)
+model Hostel {
+  id          Int           @id @default(autoincrement())
+  hostelName  Hostels       @unique
+  points      Int           @default(0)
+  GamePoints  GamePoint[]   
   
-  //relations
-  Team1         Team   @relation("Team1",fields: [team1],references: [id],onDelete: Cascade,onUpdate: Cascade)
-  Team2         Team   @relation("Team2",fields: [team2],references: [id],onDelete: Cascade,onUpdate: Cascade)
-  WinnerTeam    Team?   @relation("WinnerTeam",fields: [winner],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  
+  //Realtions
+  teams       Team[]        @relation("HostelTeam")
 }
 
-//All Enums
-enum Hostels{
+
+model Team {
+  id          Int           @id @default(autoincrement())
+  hostelId    Int
+  sport       Sports
+  sportsType  sportType?     
+  players     User[]         @relation("PlayerTeam")  
+  score       Int     //To count match won by them in categeory
+  //Relations
+  hostel      Hostel         @relation("HostelTeam",fields: [hostelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  matches1    Match[]        @relation("Team1")
+  matches2    Match[]        @relation("Team2")
+  winner      Match[]        @relation("WinnerTeam")
+  winnerPool  Categeory[]    @relation("poolWinner")
+  pool        Categeory[]        @relation("PoolTeam")
+}
+
+
+//PoolA PoolB PoolC PoolD Quaterfinals  SemiFinals  Finals Mapped to a Sport
+model Categeory {
+  id          Int            @id @default(autoincrement())
+  name        MatchType
+  sport       Sports
+
+  //Relations
+  teams       Team[]         @relation("PoolTeam")
+  winners     Team[]         @relation("poolWinner")           
+  matches     Match[]        @relation("poolMatches")
+}
+
+
+model Match {
+  id          Int           @id @default(autoincrement())
+
+  //teams
+  team1Id     Int
+  team2Id     Int
+
+  //Categeory
+  CategeoryID Int
+  type        MatchType
+
+  //Sports
+  sport       Sports
+  sportType   sportType
+  //Winner
+  winnerId    Int?
+
+  //Scores Stored as Object
+  scoreA      Int?
+  scoreB      Int?
+
+  //Status
+  status      MatchStatus    @default(Scheduled)
+
+  //Dates
+  dateStart   DateTime       @db.Timestamp
+  dateEnd     DateTime       @db.Timestamp
+
+  //Venue
+  latitude    Float?         @default(28.5444201360911)
+  longitude   Float?         @default(77.18893289553354)
+  location    String         @default("Cricket Ground")
+
+  //Relations
+  team1       Team           @relation("Team1", fields: [team1Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team2       Team           @relation("Team2", fields: [team2Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  winner      Team?          @relation("WinnerTeam", fields: [winnerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pool        Categeory      @relation("poolMatches", fields: [CategeoryID], references: [id])
+}
+
+enum Sports {
+  Badminton
+  Cricket
+  Football
+  Chess
+  TT
+  Volleyball
+  Hockey
+  Athletics
+  Squash
+}
+
+enum Hostels {
   Aaravali
   Karakoram
   Nilgiri
   Jawalamukhi
+  Kumaon
+  Satpura
+  Udaygiri
+  Dronagiri
+  Vindyanchal
+  Shivalik
+  Saptagiri
+  Zanskar
 }
 
-enum Sports{
-  Badmintion
-  Cricket
-  TableTennis
-  Swimming
+//OpenCategeory->Wieght Lifting etc
+enum MatchType {
+  PoolA
+  PoolB
+  PoolC
+  PoolD
+  Quarterfinal
+  Semifinal
+  Final
+  OpenCategeory
+}
+
+enum MatchStatus {
+  Scheduled
+  Ongoing
+  Completed
+}
+
+enum sportType{
+  Singles
+  Doubles
+  l100
+  l200
+  l1500
 }
