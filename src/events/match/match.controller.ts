@@ -476,4 +476,26 @@ export class MatchController {
             throw error
         }
     }
+
+
+
+
+    //Get apis for filtering
+
+    //All matches filtered over criterial
+    @Get('/matches/filter')
+    async filterMatchs(@Body() data:any){
+        try {
+            const result = await this.matchService.filterMatches(data);
+            return {
+                success:true,
+                matchs:result
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+
 }

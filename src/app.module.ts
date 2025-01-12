@@ -8,6 +8,7 @@ import { EventsModule } from './events/events.module';
 
 
 
+
 @Module({
   imports: [ConfigModule.forRoot(), UserModule, EventsModule],
   controllers: [AppController],

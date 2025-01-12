@@ -331,4 +331,59 @@ export class MatchService {
         return result;
     }
 
+
+
+    //Get Matches based on filters 
+    async filterMatches(data:any){
+        //Create a filter expression
+        let filter:any = {};
+        if(data.sport){
+            filter.sport = data.sport;
+        }
+
+        if(data.sportType){
+            filter.sportType = data.sportType
+        }
+
+        if(data.after){
+            filter.dateStart = {
+                gte: new Date(data.after)
+            }
+        }
+
+        if(data.before){
+            filter.dateStart = {
+                lte:new Date(data.before)
+            }
+        }
+
+        if(data.categeory){ //PoolA pool B ,quaters semifinals etc
+            filter.CategeoryId == data.categeory
+        }
+
+        if(data.location){
+            filter.location = data.location
+        }
+
+        const result = await this.prisma.match.findMany({
+            where:filter,
+            include:{
+                team1:true,
+                team2:true,
+                rounds:true
+            }
+        });
+        const result2 = await this.prisma.oCMatch.findMany({
+            where:filter,
+            include:{
+                teams:true
+            }
+        });
+        const totalResult = [...result,...result2];
+        return totalResult;
+
+    }
+
+
+
 }
