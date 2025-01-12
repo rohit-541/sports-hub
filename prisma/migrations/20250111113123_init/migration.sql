@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Team" ALTER COLUMN "score" DROP DEFAULT;

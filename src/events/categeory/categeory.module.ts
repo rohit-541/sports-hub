@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma.service';
 import { TeamsService } from '../teams/teams.service';
 
 @Module({
-  providers: [CategeoryService,PrismaService,TeamsService],
-  controllers: [CategeoryController]
+  providers: [CategeoryService, PrismaService, TeamsService],
+  controllers: [CategeoryController],
 })
 export class CategeoryModule {}

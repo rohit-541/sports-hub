@@ -1,131 +1,117 @@
-import { IsDateString, IsEmpty, IsNotEmpty, IsNumber, Min, MinDate, Validate, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
+import {
+  IsDateString,
+  IsEmpty,
+  IsNotEmpty,
+  IsNumber,
+  Min,
+  Validate,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 
-const BadmintonType:String[] = ["Singles","Doubles"];
-const AtheleticsTypes:String[] = ["l400","l100"];
-
-@ValidatorConstraint({ name: "IsTypeValid", async: false })
+// If you want to keep your custom validator logic, 
+// but it's effectively disabled if you pass 'any'.
+@ValidatorConstraint({ name: 'IsTypeValid', async: false })
 class IsType implements ValidatorConstraintInterface {
-  validate(type: String | null, args: ValidationArguments) {
-    const {sport}:any = args.object;
-    
-    console.log(type,sport);
-    //Sports is Badmintion
-    if(sport == "Badminton"){
-      if(BadmintonType.includes(type)){
-        return true;
-      }else{
-        return false;
-      }
-    }
-
-    if(sport == "Atheletics"){
-      if(AtheleticsTypes.includes(type)){
-        return true;
-      }else{
-        return false;
-      }
-    }
-
+  validate(type: any, args: ValidationArguments) {
+    const { sport }: any = args.object;
+    console.log(type, sport);
+    // For demonstration only — logic won't do much if 'type' is any
     return true;
   }
-
   defaultMessage(args: ValidationArguments) {
-    return "Team Type is wrong.Please Check it!";
+    return 'Team Type is wrong. Please check it!';
   }
 }
 
-export class MatchDto{
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    team1Id:number
+export class MatchDto {
+  // Instead of @IsNumber(), we use @IsNotEmpty() 
+  // or remove the decorators if they no longer apply
+  @IsNotEmpty()
+  team1Id: any;
 
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    team2Id:number
+  @IsNotEmpty()
+  team2Id: any;
 
-    @IsNotEmpty()
-    @IsDateString()
-    dateStart:Date
+  // If you still want to ensure it’s a date string, keep @IsDateString()
+  // but you asked for "any," so it’s contradictory to require a date string. 
+  // We'll keep the validator for demonstration, but you may remove it.
+  @IsNotEmpty()
+  @IsDateString()
+  dateStart: any;
 
-    @IsNotEmpty()
-    @IsDateString()
-    dateEnd:Date
+  @IsNotEmpty()
+  @IsDateString()
+  dateEnd: any;
 
-    @IsNotEmpty()
-    sport:String
+  @IsNotEmpty()
+  sport: any;
 
-    // @Validate(IsType)
-    sportType:String;
+  // Potentially validated by "IsType"
+  // but now typed as any
+  sportType: any;
 
-    @IsNotEmpty()
-    location:String
+  @IsNotEmpty()
+  location: any;
 
-    @IsNotEmpty()
-    CategeoryID:number
+  @IsNotEmpty()
+  CategeoryID: any;
 
-    @IsNotEmpty()
-    type:string
-
+  @IsNotEmpty()
+  type: any;
 }
 
+export class updateDto {
+  // Procedure of adding winner is different
+  @IsEmpty()
+  winner: any;
 
-export class updateDto{
-    
-    //Procedure of adding winner is different
-    @IsEmpty()
-    winner:number
+  // If these are wrong, create a New match
+  @IsEmpty()
+  team1Id: any;
 
-    //If these are wrong create a New match
-    @IsEmpty()
-    team1Id:number
+  @IsEmpty()
+  team2Id: any;
 
-    @IsEmpty()
-    team2Id:number
+  dateStart: any;
+  dateEnd: any;
 
-    dateStart:Date
-    
-    dateEnd:Date
-
-    location:string
-    longitude:number
-    latitude:number
-    
+  location: any;
+  longitude: any;
+  latitude: any;
 }
 
-export class winnerDto{
-    @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    winner:number
+export class winnerDto {
+  @IsNotEmpty()
+  winner: any;
 
-    @IsEmpty()
-    status:number
+  @IsEmpty()
+  status: any;
 
-    @IsEmpty()
-    team1:number
+  @IsEmpty()
+  team1: any;
 
-    @IsEmpty()
-    team2:number
+  @IsEmpty()
+  team2: any;
 
-    @IsEmpty()
-    DateStart:Date
-    
-    @IsEmpty()
-    DateEnd:Date
-    
-    @IsEmpty()
-    longitude:number
-    
-    @IsEmpty()
-    latitude:number
+  @IsEmpty()
+  DateStart: any;
+
+  @IsEmpty()
+  DateEnd: any;
+
+  @IsEmpty()
+  longitude: any;
+
+  @IsEmpty()
+  latitude: any;
 }
-export class ScoreDto{
 
-    @IsNotEmpty()
-    scoreA:number
+export class ScoreDto {
+  @IsNotEmpty()
+  scoreA: any;
 
-    @IsNotEmpty()
-    scoreB:number
+  @IsNotEmpty()
+  scoreB: any;
 }

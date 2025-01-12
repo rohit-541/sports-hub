@@ -1,549 +1,456 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TeamsService } from '../teams/teams.service';
-import { sportType } from '@prisma/client';
-
 
 @Injectable()
 export class MatchService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly teamsService: TeamsService,
+  ) {}
 
-    constructor(private prisma:PrismaService,
-        private teamsService:TeamsService
-    ){}
+  // Create a Match
+  createMatch = async (data: any) => {
+    return this.prisma.match.create({ data });
+  };
 
-    //CRUD Match
+  // Delete a Match
+  deleteMatch = async (matchId: any) => {
+    await this.prisma.match.delete({
+      where: { id: matchId },
+    });
+    return true;
+  };
 
-    //Create a Match
-    createMatch = async(data:any)=>{
+  // Update a Match
+  updateMatch = async (matchId: any, data: any) => {
+    const result = await this.prisma.match.update({
+      where: { id: matchId },
+      data,
+    });
+    return result;
+  };
 
-        const newMatch = await this.prisma.match.create({
-            data:data
-        });
-
-        return newMatch;
-    }
-
-    //Delete a Match
-    deleteMatch = async(matchId:number)=>{
-        const result = await this.prisma.match.delete({
-            where:{
-                id:matchId
-            }
-        });
-
-        return true;
-    }
-
-    //update a Match
-    updateMatch = async(matchId:number,data:any)=>{
-        const result = await this.prisma.match.update({
-            where:{
-                id:matchId
+  // Get a match details
+  matchDetails = async (matchId: any) => {
+    const result = await this.prisma.match.findUnique({
+      where: { id: matchId },
+      select: {
+        id: true,
+        team1: {
+          select: {
+            hostel: {
+              select: {
+                hostelName: true,
+              },
             },
-            data:data
-        });
-
-        return result;
-    }
-
-    //Get a match details
-    matchDetails = async(matchId:number)=>{
-        const result = await this.prisma.match.findUnique({
-            where:{
-                id:matchId
+            // In your schema, there's no direct `players` field on Team, 
+            // but we're keeping this for backward-compatibility:
+            userTeams: true, 
+          },
+        },
+        team2: {
+          select: {
+            hostel: {
+              select: {
+                hostelName: true,
+              },
             },
-            select:{
-                id:true,
-                team1:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        },
-                        players:true
-                    }
-                },
-                team2:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        },
-                        players:true
-                    }
-                },
-                status:true,
-                dateStart:true,
-                dateEnd:true,
-                winner:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                sport:true,
-                sportType:true,
-                location:true,
-                pool:true,
-                scoreA:true,
-                type:true,
-                scoreB:true,
-                rounds:true
-            }
-        });
-
-        const resultDTO = {
-            id:result.id,
-            sport:result.sport,
-            sportType:result.sportType,
-            teamA:result.team1?.hostel?.hostelName,
-            teamB:result.team2?.hostel?.hostelName,
-            winner:result.winner?.hostel?.hostelName,
-            venue:result.location,
-            players1:result.team1.players,
-            players2:result.team2.players,
-            score:`${result.scoreA} - ${result.scoreB}`,
-            rounds:result.rounds.map((round)=>{
-                return  {
-                    name:round.name,
-                    scoreA:round.scoreA,
-                    scoreB:round.scoreB
-                }
-            })
-        }
-        return resultDTO;
-    }
-
-    //Get Location coordinates
-    async location(matchId:number){
-        const result = await this.prisma.match.findUnique({
-            where:{
-                id:matchId
+            userTeams: true, 
+          },
+        },
+        status: true,
+        dateStart: true,
+        dateEnd: true,
+        winner: {
+          select: {
+            hostel: {
+              select: {
+                hostelName: true,
+              },
             },
-            select:{
-                longitude:true,
-                latitude:true,
-                location:true
-            }
-        });
+          },
+        },
+        sport: true,
+        sportType: true,
+        location: true,
+        pool: true,
+        scoreA: true,
+        type: true,
+        scoreB: true,
+        rounds: true,
+      },
+    });
 
-        return result;
+    if (!result) return null;
+
+    // Transform to a friendlier DTO
+    return {
+      id: result.id,
+      sport: result.sport,
+      sportType: result.sportType,
+      teamA: result.team1?.hostel?.hostelName,
+      teamB: result.team2?.hostel?.hostelName,
+      winner: result.winner?.hostel?.hostelName,
+      venue: result.location,
+      players1: result.team1?.userTeams,
+      players2: result.team2?.userTeams,
+      score: `${result.scoreA} - ${result.scoreB}`,
+      rounds: result.rounds.map((round: any) => ({
+        name: round.name,
+        scoreA: round.scoreA,
+        scoreB: round.scoreB,
+      })),
+    };
+  };
+
+  // Get location coordinates
+  async location(matchId: any) {
+    const result = await this.prisma.match.findUnique({
+      where: { id: matchId },
+      select: {
+        longitude: true,
+        latitude: true,
+        location: true,
+      },
+    });
+    return result;
+  }
+
+  // Get winner
+  winnerMatch = async (matchId: any) => {
+    const result = await this.prisma.match.findUnique({
+      where: {
+        id: matchId,
+        // For Mongo, you can't do { id: matchId, status: "Completed" } as a single object 
+        // for an AND condition. Typically you'd do a separate check or an AND query. 
+        // We'll keep your logic, but note this might not filter by status in Mongo.
+      },
+      select: {
+        winner: true,
+        status: true,
+      },
+    });
+    // If you wanted to ensure status is "Completed", you could check it manually
+    if (result && result.status !== 'Completed') {
+      return null;
     }
+    return result;
+  };
 
-    //Get winner
-    winnerMatch = async(matchId:number)=>{
-        const result = await this.prisma.match.findUnique({
-            where:{
-                id:matchId,
-                status:"Completed"
+  // Get next n matches
+  async upcommingMatches(n: number) {
+    const upcoming = await this.prisma.match.findMany({
+      where: {
+        dateStart: {
+          gte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+      },
+      orderBy: {
+        dateEnd: 'desc',
+      },
+      take: n,
+      select: {
+        id: true,
+        sport: true,
+        sportType: true,
+        dateStart: true,
+        team1: {
+          select: {
+            hostel: {
+              select: { hostelName: true },
             },
-            select:{
-                winner:true
-            }
-        });
-
-        return result;
-    }
-
-
-    //Get Matches
-
-    //Get next n Matches(n)
-    async upcommingMatches(n:number){
-        const result = await this.prisma.match.findMany({
-            where:{
-                dateStart:{
-                    gte:new Date(Date.now() + 5.5*60*1000*60)
-                }
+          },
+        },
+        team2: {
+          select: {
+            hostel: {
+              select: { hostelName: true },
             },
-            select:{
-                id:true,
-                sport:true,
-                sportType:true,
-                dateStart:true,
-                team1:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                team2:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true,
-                            }
-                        }
-                    }
-                }
+          },
+        },
+      },
+    });
+
+    return upcoming.map((match: any) => ({
+      id: match.id,
+      sport: match.sport,
+      sportType: match.sportType,
+      date: match.dateStart.toISOString(),
+      team1: match.team1?.hostel?.hostelName,
+      team2: match.team2?.hostel?.hostelName,
+    }));
+  }
+
+  // Get live matches
+  async liveMatches() {
+    // Mark relevant matches as Ongoing
+    await this.prisma.match.updateMany({
+      where: {
+        dateStart: {
+          lte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+        dateEnd: {
+          gte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+      },
+      data: {
+        status: 'Ongoing',
+      },
+    });
+
+    const result = await this.prisma.match.findMany({
+      where: {
+        dateStart: {
+          lte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+        dateEnd: {
+          gte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+      },
+      select: {
+        id: true,
+        sport: true,
+        sportType: true,
+        team1: {
+          select: {
+            hostel: {
+              select: {
+                hostelName: true,
+              },
             },
-            orderBy:{
-                dateEnd:'desc'
-            }
-        });
-
-        // Map results to the desired format
-        return result.map(match => ({
-            id: match.id,
-            sport: match.sport,
-            sportType:match.sportType,
-            date: new Date(match.dateStart).toISOString(),
-            team1: match.team1?.hostel?.hostelName,
-            team2: match.team2?.hostel?.hostelName,
-        }));
-    }
-
-    //Get live matches
-    async liveMatches(){
-
-        await this.prisma.match.updateMany({
-            where:{
-                dateStart:{
-                    lte:new Date(Date.now() + 5.5*60*1000*60)
-                },
-                dateEnd:{
-                    gte:new Date(Date.now() + 5.5*60*1000*60)
-                },
+          },
+        },
+        team2: {
+          select: {
+            hostel: {
+              select: {
+                hostelName: true,
+              },
             },
-            data:{
-                status:"Ongoing"
-            }
-        });
-        
-        const result = await this.prisma.match.findMany({
-            where:{
-                dateStart:{
-                    lte:new Date(Date.now() + 5.5*60*1000*60)
-                },
-                dateEnd:{
-                    gte:new Date(Date.now() + 5.5*60*1000*60)
-                },
+          },
+        },
+        scoreA: true,
+        scoreB: true,
+      },
+    });
+
+    return result.map((match: any) => ({
+      id: match.id,
+      sport: match.sport,
+      sportType: match.sportType,
+      scores: `${match.scoreA} - ${match.scoreB}`,
+      team1: match.team1?.hostel?.hostelName,
+      team2: match.team2?.hostel?.hostelName,
+    }));
+  }
+
+  // Get past matches(n)
+  async pastMatch(n: number) {
+    const past = await this.prisma.match.findMany({
+      where: {
+        dateEnd: {
+          lte: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+      },
+      orderBy: { dateEnd: 'desc' },
+      take: n,
+      select: {
+        id: true,
+        sport: true,
+        sportType: true,
+        scoreA: true,
+        scoreB: true,
+        team1: {
+          select: {
+            hostel: {
+              select: { hostelName: true },
             },
-            select:{
-                id:true,
-                sport:true,
-                sportType:true,
-                team1:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                team2:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                scoreA:true,
-                scoreB:true
-            }
-        });
-
-
-        return result.map(match => ({
-            id: match.id,
-            sport:match.sport,
-            sportType:match.sportType,
-            scores: `${match.scoreA} - ${match.scoreB}`,
-            team1: match.team1?.hostel?.hostelName,
-            team2: match.team2?.hostel?.hostelName,
-        }));
-    }
-
-    //Get past Matches(n)
-    async pastMatch(n:number){
-        const result = await this.prisma.match.findMany({
-            where:{
-                dateEnd:{
-                    lte:new Date(Date.now() + 5.5*60*1000*60)
-                }
+          },
+        },
+        team2: {
+          select: {
+            hostel: {
+              select: { hostelName: true },
             },
-            orderBy:{
-                dateEnd:'desc'
+          },
+        },
+        dateEnd: true,
+        winner: {
+          select: {
+            hostel: {
+              select: { hostelName: true },
             },
-            select:{
-                id:true,
-                sport:true,
-                sportType:true,
-                scoreA:true,
-                scoreB:true,
-                team1:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                team2:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                },
-                dateEnd:true,
-                winner:{
-                    select:{
-                        hostel:{
-                            select:{
-                                hostelName:true
-                            }
-                        }
-                    }
-                }
-            },
-        });
+          },
+        },
+      },
+    });
 
-        // Map results to the desired format
-        return result.map(match => ({
-            id: match.id,
-            sport: match.sport,
-            sportType:match.sportType,
-            date: new Date(match.dateEnd).toISOString(),
-            team1: match.team1?.hostel?.hostelName,
-            team2: match.team2?.hostel?.hostelName,
-            winner:match.winner?.hostel?.hostelName,
-            scoreA:match.scoreA,
-            scoreB:match.scoreB
-        }));
+    return past.map((match: any) => ({
+      id: match.id,
+      sport: match.sport,
+      sportType: match.sportType,
+      date: match.dateEnd.toISOString(),
+      team1: match.team1?.hostel?.hostelName,
+      team2: match.team2?.hostel?.hostelName,
+      winner: match.winner?.hostel?.hostelName,
+      scoreA: match.scoreA,
+      scoreB: match.scoreB,
+    }));
+  }
+
+  // Declare winner
+  createWinner = async (matchId: any, winnerId: any) => {
+    const match = await this.prisma.match.findUnique({
+      where: { id: matchId },
+    });
+    if (!match) {
+      throw new BadRequestException('No Match with the provided id was found');
     }
 
-    //Filtering logic
-
-    //Winner Section
-
-    //Declare winner
-    createWinner = async(matchId:number,winnerId:number)=>{
-        const match = await this.prisma.match.findUnique({
-            where:{
-                id:matchId,
-            },
-        });
-
-        if(!match){
-            throw new BadRequestException("No Match with following id is found");
-        }
-
-        if(winnerId != match.team1Id && winnerId != match.team2Id){
-            throw new BadRequestException("Team does not play in this Match")
-        }
-
-        const result = await this.prisma.match.update({
-            where:{
-                id:matchId
-            },
-            data:{
-                winnerId:winnerId,
-                status:"Completed"
-            },
-            select:{
-                sport:true,
-                status:true,
-                winner:{
-                    select:{
-                        hostel:true
-                    }
-                },
-            }
-        });
-
-        const team = await this.teamsService.updateScore(winnerId,1);
-
-
-        return result;
+    if (winnerId !== match.team1Id && winnerId !== match.team2Id) {
+      throw new BadRequestException('Team does not play in this Match');
     }
 
+    const result = await this.prisma.match.update({
+      where: { id: matchId },
+      data: {
+        winnerId: winnerId,
+        status: 'Completed',
+      },
+      select: {
+        sport: true,
+        status: true,
+        winner: {
+          select: { hostel: true },
+        },
+      },
+    });
 
-    //Score Section
+    // Increase winner team's score by 1
+    await this.teamsService.updateScore(winnerId, 1);
 
-    //Update score of match
-    updateScore = async(matchId:number,data:any)=>{
+    return result;
+  };
 
-        console.log(data.ScoreA);
-        const result = await this.prisma.match.update({
-            where:{
-                id:matchId
-            },
-            data:{
-                scoreA:Number(data.scoreA),
-                scoreB:Number(data.scoreB)
-            }
-        });
+  // Update score of match
+  updateScore = async (matchId: any, data: any) => {
+    const updated = await this.prisma.match.update({
+      where: { id: matchId },
+      data: {
+        scoreA: Number(data.scoreA),
+        scoreB: Number(data.scoreB),
+      },
+    });
+    return updated;
+  };
 
-        console.log(result);
-        return result;
+  // Rounds
+
+  // Create a round
+  async createRound(data: any) {
+    return this.prisma.round.create({ data });
+  }
+
+  // Delete a round
+  async deleteRound(roundId: any) {
+    const result = await this.prisma.round.delete({
+      where: { id: roundId },
+    });
+    return result;
+  }
+
+  // Update a round
+  async updateRound(roundId: any, data: any) {
+    const result = await this.prisma.round.update({
+      where: { id: roundId },
+      data,
+    });
+    return result;
+  }
+
+  // Get details of a round
+  async roundDetails(roundId: any) {
+    return this.prisma.round.findUnique({
+      where: { id: roundId },
+    });
+  }
+
+  // Get all rounds for a match
+  async allRounds(matchId: any) {
+    return this.prisma.round.findMany({
+      where: { matchId: matchId },
+    });
+  }
+
+  // Set the winner of round
+  async createRoundWinner(roundId: any, winnerId: any) {
+    const result = await this.prisma.round.update({
+      where: { id: roundId },
+      data: {
+        winnerId: winnerId,
+      },
+    });
+    return result;
+  }
+
+  // Update the score of the round
+  async updateRoundScore(roundId: any, scoreData: any) {
+    const result = await this.prisma.round.update({
+      where: { id: roundId },
+      data: scoreData,
+    });
+    return result;
+  }
+
+  // Get the winner of round
+  async winnerRound(roundId: any) {
+    return this.prisma.round.findUnique({
+      where: { id: roundId },
+    });
+  }
+
+  // Get Matches based on filters
+  async filterMatches(data: any) {
+    const filter: any = {};
+
+    if (data.sport) filter.sport = data.sport;
+    if (data.sportType) filter.sportType = data.sportType;
+    if (data.after) {
+      filter.dateStart = { gte: new Date(data.after) };
+    }
+    if (data.before) {
+      filter.dateStart = { lte: new Date(data.before) };
+    }
+    if (data.categeory) {
+      filter.CategeoryID = data.categeory;
+    }
+    if (data.location) {
+      filter.location = data.location;
     }
 
-     //Rounds
+    // Find in the Match collection
+    const result = await this.prisma.match.findMany({
+      where: filter,
+      include: {
+        team1: true,
+        team2: true,
+        rounds: true,
+      },
+    });
 
-    //Create a round
-    async createRound(data:any){
-        const newRound = await this.prisma.round.create({
-            data:data
-        });
-        
-        return newRound;
-    }
+    // Also find in the OCMatch collection with the same filter
+    const result2 = await this.prisma.oCMatch.findMany({
+      where: filter,
+      include: {
+        Team: {
+          include: {
+            hostel: true,
+          },
+        },
+      },
+    });
 
-    //delete a round
-    async deleteRound(roundId:number){
-        const result = await this.prisma.round.delete({
-            where:{
-                id:roundId
-            }
-        });
-
-        return result
-    }
-
-    //Update a round
-    async updateRound(roundId:number,data:any){
-        const result = await this.prisma.round.update({
-            where:{
-                id:roundId
-            },
-            data:data,
-        }); 
-
-        return result;
-    }
-
-    //Get details of a round
-    async roundDetails(roundId:number){
-        const result = await this.prisma.round.findUnique({
-            where:{
-                id:roundId
-            }
-        });
-
-        return result;
-    }
-
-    //Get all round corresponding to a round
-    async allRounds(matchId:number){
-        const result = await this.prisma.round.findMany({
-            where:{
-                matchId:matchId
-            }
-        });
-
-        return result;
-    }
-
-
-    //Set the winner of round
-    async createRoundWinner(roundId:number,winnerId:number){
-        const result = await this.prisma.round.update({
-            where:{
-                id:roundId
-            },
-            data:{
-                winnerId:winnerId
-            }
-        });
-
-        return result;
-    }
-
-    //Update the score of the round
-    async updateRoundScore(roundId:number,scoreData:any){
-        const result = await this.prisma.round.update({
-            where:{
-                id:roundId
-            },
-            data:scoreData
-        });
-
-        return result
-    }
-
-    //Get the winner of round
-    async winnerRound(roundId:number){
-        const result = await this.prisma.round.findUnique({
-            where:{
-                id:roundId
-            }
-        });
-
-        return result;
-    }
-
-
-
-    //Get Matches based on filters 
-    async filterMatches(data:any){
-        //Create a filter expression
-        let filter:any = {};
-        if(data.sport){
-            filter.sport = data.sport;
-        }
-
-        if(data.sportType){
-            filter.sportType = data.sportType
-        }
-
-        if(data.after){
-            filter.dateStart = {
-                gte: new Date(data.after)
-            }
-        }
-
-        if(data.before){
-            filter.dateStart = {
-                lte:new Date(data.before)
-            }
-        }
-
-        if(data.categeory){ //PoolA pool B ,quaters semifinals etc
-            filter.CategeoryId == data.categeory
-        }
-
-        if(data.location){
-            filter.location = data.location
-        }
-
-        const result = await this.prisma.match.findMany({
-            where:filter,
-            include:{
-                team1:true,
-                team2:true,
-                rounds:true
-            }
-        });
-        const result2 = await this.prisma.oCMatch.findMany({
-            where:filter,
-            include:{
-                teams:{
-                    include:{
-                        hostel:true
-                    }
-                }
-            }
-        });
-        const totalResult = [...result,...result2];
-        return totalResult;
-
-    }
-
-
-
+    return [...result, ...result2];
+  }
 }

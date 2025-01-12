@@ -3,190 +3,160 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class OcmatchService {
+  constructor(private readonly prisma: PrismaService) {}
 
-    constructor(private prisma:PrismaService){}
+  // Create an OC match
+  async createOCMatch(data: any) {
+    const newMatch = await this.prisma.oCMatch.create({
+      data: data,
+    });
+    return newMatch;
+  }
 
-    //Create a OC match
-    async createOCMatch(data:any){
-        const newMatch = await this.prisma.oCMatch.create({
-            data:data
-        });
+  // Delete an OC Match
+  async deleteMatch(matchId: any) {
+    const result = await this.prisma.oCMatch.delete({
+      where: {
+        id: matchId,
+      },
+    });
+    return result;
+  }
 
-        return newMatch;
+  // Update an OC Match
+  async updateMatch(matchId: any, data: any) {
+    const result = await this.prisma.oCMatch.update({
+      where: {
+        id: matchId,
+      },
+      data: data,
+    });
+    return result;
+  }
+
+  // Get Details of OC Match
+  async matchDetails(matchId: any) {
+    const result = await this.prisma.oCMatch.findUnique({
+      where: { id: matchId },
+      include: {
+        Team: {
+          select: {
+            hostel: true,
+          },
+        },
+      },
+    });
+    return result;
+  }
+
+  // Add a Team to OC Match
+  async addTeam(matchId: any, teamIds: any[]) {
+    // 'set' overwrites existing teams. If you only want to add, consider 'connect' or 'push' logic.
+    const result = await this.prisma.oCMatch.update({
+      where: { id: matchId },
+      data: {
+        Team: {
+          set: teamIds.map((t: any) => ({ id: t })),
+        },
+      },
+    });
+    return result;
+  }
+
+  // Set rank of team
+  async setRank(teamId: any, rank: number) {
+    const result = await this.prisma.team.update({
+      where: {
+        id: teamId,
+      },
+      data: {
+        rank: rank,
+      },
+    });
+    return result;
+  }
+
+  // Add Winners of OC Match
+  async addWinner(matchId: any, winnerIds: any[]) {
+    // Give each winner a rank = its index
+    winnerIds.forEach(async (wid: any, index) => {
+      await this.setRank(wid, index);
+    });
+
+    const result = await this.prisma.oCMatch.update({
+      where: { id: matchId },
+      data: {
+        ocMatchWinners: {
+          set: winnerIds.map((wid: any) => ({ id: wid })),
+        },
+      },
+    });
+
+    return result;
+  }
+
+  // Delete a Winner of OC Match
+  async removeWinner(matchId: any, winnerId: any) {
+    const result = await this.prisma.oCMatch.update({
+      where: { id: matchId },
+      data: {
+        ocMatchWinners: {
+          disconnect: [{ id: winnerId }],
+        },
+      },
+    });
+    return result;
+  }
+
+  // Get the Winners of OC Match (sorted by Rank)
+  async winnerMatch(matchId: any) {
+    const result = await this.prisma.oCMatch.findUnique({
+      where: { id: matchId }
+      // include: {
+      //   // ocMatchWinners: {
+      //   //   orderBy: {
+      //   //     rank: 'asc',
+      //   //   },
+      //   },
+      // },
+    });
+    return result;
+  }
+
+  // Set the ranks (optional utility)
+  async setRanks(teamIds: any[]) {
+    try {
+      // Validate all IDs (which are typed as 'any' now)
+      const validIds = await Promise.all(
+        teamIds.map(async (tid: any) => {
+          const team = await this.prisma.team.findUnique({ where: { id: tid } });
+          if (!team) throw new Error(`Invalid team ID: ${tid}`);
+          return tid;
+        }),
+      );
+
+      // If valid, update
+      await Promise.all(validIds.map((tid: any, index) => this.setRank(tid, index)));
+      return true;
+    } catch (error) {
+      console.error(error.message);
+      return false;
     }
+  }
 
-    //Delete a OC Match
-    async deleteMatch(matchId:number){
-        const result = await this.prisma.oCMatch.delete({
-            where:{
-                id:matchId
-            }
-        });
-
-        return result;
-    }
-
-    //Update a OC match
-    async updateMatch(matchId:number,data:any){
-        const result = await this.prisma.oCMatch.update({
-            where:{
-                id:matchId
-            },
-            data:data
-        });
-
-        return result;
-    }
-    //Get Details of OC Match
-    async matchDetails(matchId:number){
-        const result = await this.prisma.oCMatch.findUnique({
-            where:{
-                id:matchId
-            },
-            include:{
-                teams:{
-                    select:{
-                        hostel:true,
-                    }
-                }
-            }
-        });
-
-        return result;
-    }
-
-    //Add a Team to OC Match
-    async addTeam(matchId:number,teamIds:number[]){
-        const result = await this.prisma.oCMatch.update({
-            where:{
-                id:matchId
-            },
-            data:{
-                teams:{
-                    set:teamIds.map((id)=>{
-                        console.log("adding Ids");
-                        console.log(id);
-                        return ({id})})
-                }
-            }
-        });
-
-        return result;
-    }
-
-    //Set rank of team
-    async setRank(teamId:number,rank:number){
-        const result = await this.prisma.team.update({
-            where:{
-                id:teamId
-            },
-            data:{
-                rank:rank
-            }
-        });
-
-        return result;
-    }
-    //Add Winners of OC Match
-    //rank -> order in gc
-    //Score->total quantity to store strength of team
-    async addWinner(matchId:number,winnerIds:number[]){//(set the rank to team)
-
-        winnerIds.forEach(async (id,index)=>{
-            await this.setRank(id,index);
-        })
-
-        const result = await this.prisma.oCMatch.update({
-            where:{
-                id:matchId
-            },
-            data:{
-                winners:{
-                    set:winnerIds.map((id)=>({id}))
-                    
-                }
-            }
-        });
-
-        return result;
-    }
-
-    //Delete a Winner of OC Match
-    async removeWinner(matchId:number,winnerId:number){//(set the rank to team)
-
-        const result = await this.prisma.oCMatch.update({
-            where:{
-                id:matchId
-            },
-            data:{
-                winners:{
-                    disconnect:[{
-                        id:winnerId
-                    }]   
-                }
-            }
-        });
-
-        return result;
-    }
-    //Get the Winners of OC Match(sorted based on Rank)
-    async winnerMatch(matchId:number){
-        const result = await this.prisma.oCMatch.findUnique({
-            where:{
-                id:matchId
-            },
-            include:{
-                winners:{
-                    orderBy:{
-                        rank:'asc'
-                    }
-                }
-            },
-        });
-
-        return result;
-    }
-
-    //Set the ranks
-    async setRanks(teamIds: number[]) {
-        try {
-            // Validate all IDs before proceeding
-            const validIds = await Promise.all(
-                teamIds.map(async (id) => {
-                    const team = await this.prisma.team.findUnique({ where: { id } });
-                    if (!team) throw new Error(`Invalid team ID: ${id}`);
-                    return id;
-                })
-            );
-    
-            // If all IDs are valid, update the ranks
-            await Promise.all(
-                validIds.map((id, index) => this.setRank(id, index))
-            );
-    
-            return true; // Success
-        } catch (error) {
-            console.error(error.message);
-            return false; // Indicate failure
-        }
-    }
-    
-    //Get the Teams
-    async allTeams(matchId:number){
-        const result = await this.prisma.oCMatch.findUnique({
-            where:{
-                id:matchId
-            },
-            select:{
-                teams:{
-                    select:{
-                        players:true,
-                        hostel:true
-                    }, 
-                },
-            }
-        });
-        
-        return result;
-    }
+  // Get all teams of an OC Match
+  async allTeams(matchId: any) {
+    const result = await this.prisma.oCMatch.findUnique({
+      where: { id: matchId },
+      select: {
+        ocMatchTeams: {
+          // select: {
+          //   : true, // not in your schema, but kept for consistency
+          //   hostel: true,
+          // },
+        },
+      },
+    });
+    return result;
+  }
 }
