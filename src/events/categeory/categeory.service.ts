@@ -51,7 +51,8 @@ export class CategeoryService {
                 name:true,
                 sport:true,
                 matches:true,
-                winners:true
+                winners:true,
+                teams:true,
             }
         });
 
@@ -104,5 +105,98 @@ export class CategeoryService {
         });
 
         return result;
+    }
+
+    //Get all Categeory of sports
+    async CategeoryBySport(sport:any){
+        console.log(sport);
+        const result = await this.prisma.categeory.findMany({
+            where:{
+                sport:sport
+            },
+            select:{
+                teams:true,
+                matches:true,
+            }
+        });
+
+        console.log(result);
+        return result;
+    }
+
+    async addTeam(CatId:number,teamId:number){
+        const result = await this.prisma.categeory.update({
+            where:{
+                id:CatId
+            },
+            data:{
+                teams:{
+                    connect:[
+                        {
+                            id:teamId
+                        }
+                    ]
+                }
+            }
+        });
+
+        return result;
+    }
+
+    async allCat(){
+        const result = await this.prisma.categeory.findMany({
+            select:{
+                id:true,
+                teams:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        },
+                        score:true,
+                    },
+                },
+                name:true,
+                sport:true,
+                matches:{
+                    select:{
+                        team1:{
+                            select:{
+                                hostel:true
+                            }
+                        },
+                        team2:{
+                            select:{
+                                hostel:true
+                            }
+                        },
+                        scoreA:true,
+                        scoreB:true,
+                    }
+                },
+            }
+        });
+
+        const resultDTO = result.map((cat)=>({
+            id:cat.id,
+            name:cat.name,
+            sport:cat.sport,
+            teams:cat.teams.map((team)=>(
+                {
+                    Hostel:team.hostel.hostelName,
+                    Score:team.score
+                })),
+            Matches:cat.matches.map((match)=>(
+                {
+                    teams:[match.team1?.hostel?.hostelName,match.team2?.hostel?.hostelName],
+                    scoreA:match.scoreA,
+                    scoreB:match.scoreB
+                }
+            ))
+        }))
+
+
+        return resultDTO;
     }
 }

@@ -47,14 +47,14 @@ model Team {
   rank        Int?
   players     User[]         @relation("PlayerTeam")  
   score       Int?     //To count match won by them in categeory
-  
+
   //Relations
   hostel      Hostel         @relation("HostelTeam",fields: [hostelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   matches1    Match[]        @relation("Team1")
   matches2    Match[]        @relation("Team2")
   winner      Match[]        @relation("WinnerTeam")
   winnerPool  Categeory[]    @relation("poolWinner")
-  pool        Categeory[]    @relation("PoolTeam")
+  pools       Categeory[]       @relation("PoolTeam")
   rounds      Round[]
   ocMatchId   Int?
   
@@ -75,7 +75,7 @@ model Categeory {
   //Relations
   teams       Team[]         @relation("PoolTeam")
   winners     Team[]         @relation("poolWinner")           
-  matches     Match[]        @relation("poolMatches")
+  matches     Match[]       
   @@unique([sport,name])
 }
 
@@ -120,7 +120,7 @@ model Match {
   team1       Team           @relation("Team1", fields: [team1Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   team2       Team           @relation("Team2", fields: [team2Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   winner      Team?          @relation("WinnerTeam", fields: [winnerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  pool        Categeory      @relation("poolMatches", fields: [CategeoryID], references: [id])
+  pool        Categeory      @relation(fields: [CategeoryID], references: [id],onDelete: Cascade,onUpdate: Cascade)
 }
 
 model Round{

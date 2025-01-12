@@ -97,6 +97,34 @@ export class CategeoryController {
         }
     }
 
+    @Post('/addTeam/:id')
+    async addTeam(@Param('id') id:number,@Body() data:any){
+        const CatId:number = Number(id);
+        const teamId:number = Number(data.id);
+
+        if(!CatId || !teamId){
+            throw new BadRequestException("Invalid Ids")
+        }
+
+        try {
+            await this.catService.addTeam(CatId,teamId);
+            return {
+                success:true,
+                message:"Team added successfully to Categeory"
+            }
+        } catch (error) {
+            if(error instanceof PrismaClientKnownRequestError){
+                if(error.code == "P2025"){
+                    throw new BadRequestException("Categeory with this id not found");
+                }
+            }
+            if(error instanceof PrismaClientValidationError){
+                throw new BadRequestException("Invalid Structure of Data");
+            }
+            throw error;
+        }
+    }   
+
     //Create Winner
     @Post('/winner/:id')
     async createWinner(@Body() data:any,@Param('id') id:number){
@@ -139,4 +167,40 @@ export class CategeoryController {
         }
     }
 
+    @Get('/allMatches/:id')
+    async allMatches(@Param('id') id:number){ 
+        const catId:number = Number(id);
+
+        if(!catId){
+            throw new BadRequestException("Invalid Id");
+        }
+    }   
+
+    @Get('/allMatch/BySport')
+    async allMatchBySport(@Body() data:any){
+        const sport = data.sport;
+        console.log(sport);
+        try {
+            const result = await this.catService.CategeoryBySport(sport);
+            return {
+                success:true,
+                Categeory:result
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    @Get('/Cat/all')
+    async allCategeories(){
+        try {
+            const result = await this.catService.allCat();
+            return{
+                success:true,
+                response:result
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
 }

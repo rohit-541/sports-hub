@@ -44,6 +44,9 @@ export class teamDto{
     @IsEmpty()
     score:number
 
+    @IsNotEmpty()
+    poolId:number
+
     players:number[]
 }
 
@@ -58,7 +61,7 @@ export class scoreDto{
 export class updateDto{
     hostel:string
     sport:string
-
+    sportsType:string
     @IsEmpty()
     score:number
 

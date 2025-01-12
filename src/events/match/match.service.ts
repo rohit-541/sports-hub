@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TeamsService } from '../teams/teams.service';
+import { sportType } from '@prisma/client';
 
 
 @Injectable()
@@ -52,23 +53,70 @@ export class MatchService {
                 id:matchId
             },
             select:{
-                team1:true,
-                team2:true,
+                id:true,
+                team1:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        },
+                        players:true
+                    }
+                },
+                team2:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        },
+                        players:true
+                    }
+                },
                 status:true,
                 dateStart:true,
                 dateEnd:true,
-                winner:true,
-                longitude:true,
-                latitude:true,
+                winner:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                sport:true,
+                sportType:true,
                 location:true,
                 pool:true,
                 scoreA:true,
                 type:true,
                 scoreB:true,
+                rounds:true
             }
         });
 
-        return result;
+        const resultDTO = {
+            id:result.id,
+            sport:result.sport,
+            sportType:result.sportType,
+            teamA:result.team1?.hostel?.hostelName,
+            teamB:result.team2?.hostel?.hostelName,
+            winner:result.winner?.hostel?.hostelName,
+            venue:result.location,
+            players1:result.team1.players,
+            players2:result.team2.players,
+            score:`${result.scoreA} - ${result.scoreB}`,
+            rounds:result.rounds.map((round)=>{
+                return  {
+                    name:round.name,
+                    scoreA:round.scoreA,
+                    scoreB:round.scoreB
+                }
+            })
+        }
+        return resultDTO;
     }
 
     //Get Location coordinates
@@ -113,13 +161,44 @@ export class MatchService {
                     gte:new Date(Date.now() + 5.5*60*1000*60)
                 }
             },
-            take:n,
+            select:{
+                id:true,
+                sport:true,
+                sportType:true,
+                dateStart:true,
+                team1:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                team2:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true,
+                            }
+                        }
+                    }
+                }
+            },
             orderBy:{
                 dateEnd:'desc'
             }
         });
 
-        return result;
+        // Map results to the desired format
+        return result.map(match => ({
+            id: match.id,
+            sport: match.sport,
+            sportType:match.sportType,
+            date: new Date(match.dateStart).toISOString(),
+            team1: match.team1?.hostel?.hostelName,
+            team2: match.team2?.hostel?.hostelName,
+        }));
     }
 
     //Get live matches
@@ -147,11 +226,43 @@ export class MatchService {
                 dateEnd:{
                     gte:new Date(Date.now() + 5.5*60*1000*60)
                 },
+            },
+            select:{
+                id:true,
+                sport:true,
+                sportType:true,
+                team1:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                team2:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                scoreA:true,
+                scoreB:true
             }
         });
-        console.log(new Date(Date.now() + 5.5*60*1000*60));
 
-        return result;
+
+        return result.map(match => ({
+            id: match.id,
+            sport:match.sport,
+            sportType:match.sportType,
+            scores: `${match.scoreA} - ${match.scoreB}`,
+            team1: match.team1?.hostel?.hostelName,
+            team2: match.team2?.hostel?.hostelName,
+        }));
     }
 
     //Get past Matches(n)
@@ -162,13 +273,58 @@ export class MatchService {
                     lte:new Date(Date.now() + 5.5*60*1000*60)
                 }
             },
-            take:n,
             orderBy:{
                 dateEnd:'desc'
-            }
+            },
+            select:{
+                id:true,
+                sport:true,
+                sportType:true,
+                scoreA:true,
+                scoreB:true,
+                team1:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                team2:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                },
+                dateEnd:true,
+                winner:{
+                    select:{
+                        hostel:{
+                            select:{
+                                hostelName:true
+                            }
+                        }
+                    }
+                }
+            },
         });
 
-        return result;
+        // Map results to the desired format
+        return result.map(match => ({
+            id: match.id,
+            sport: match.sport,
+            sportType:match.sportType,
+            date: new Date(match.dateEnd).toISOString(),
+            team1: match.team1?.hostel?.hostelName,
+            team2: match.team2?.hostel?.hostelName,
+            winner:match.winner?.hostel?.hostelName,
+            scoreA:match.scoreA,
+            scoreB:match.scoreB
+        }));
     }
 
     //Filtering logic
@@ -376,7 +532,11 @@ export class MatchService {
         const result2 = await this.prisma.oCMatch.findMany({
             where:filter,
             include:{
-                teams:true
+                teams:{
+                    include:{
+                        hostel:true
+                    }
+                }
             }
         });
         const totalResult = [...result,...result2];
