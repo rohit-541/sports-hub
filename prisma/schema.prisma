@@ -157,32 +157,32 @@ model Match {
 
 //Round Model
 model Round {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
   name      String    
-  matchId   String    @db.ObjectId
+  matchId   String      @db.ObjectId
 
-  scoreA    Int?
-  scoreB    Int?
-  winnerId  String?    @db.ObjectId
+  scoreA    Int?        @default(0)
+  scoreB    Int?        @default(0)
+  winnerId  String?     @db.ObjectId
   Stages    Stages[]
   // Relations
-  Match     Match?     @relation(fields: [matchId], references: [id])
-  winner    Team?      @relation(fields: [winnerId], references: [id])
+  Match     Match?      @relation(fields: [matchId], references: [id])
+  winner    Team?       @relation(fields: [winnerId], references: [id])
 
   @@unique([name, matchId])
 }
 
 //Stages of Round
 model Stages{
-  id                String      @id     @default(auto())    @map("_id") @db.ObjectId
+  id                String        @id     @default(auto())    @map("_id") @db.ObjectId
   name              String
-  scoreA            Int 
-  scoreB            Int
-  roundId           String      @db.ObjectId
-  winnerId          String      @db.ObjectId        
+  scoreA            Int? 
+  scoreB            Int?
+  roundId           String        @db.ObjectId
+  winnerId          String?       @db.ObjectId        
 
-  winner            Team        @relation(fields: [winnerId],references: [id])
-  Round             Round       @relation(fields: [roundId],references: [id])
+  winner            Team?         @relation(fields: [winnerId],references: [id])
+  Round             Round         @relation(fields: [roundId],references: [id])
 }
 
 model OCMatch {

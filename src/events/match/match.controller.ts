@@ -4,6 +4,7 @@ import {
     Controller,
     Delete,
     Get,
+    InternalServerErrorException,
     Param,
     Post,
     Put,
@@ -246,15 +247,22 @@ import {
         }
       }
     }
-  
-    // Rounds
-  
+
+
+
+    //-------------------
+    //    Rounds        |
+    //-------------------
+    
     // Create a round
     @Post('/round/')
     async createRound(@Body() data: any) {
       try {
         if (data.matchId) data.matchId = data.matchId; 
-        const result = await this.matchService.createRound(data);
+        let {n,...otherdata} = data;
+        n = Number(n)||3;
+
+        const result = await this.matchService.createRound(otherdata,n);
         return {
           success: true,
           round: result,
@@ -268,7 +276,12 @@ import {
             throw new BadRequestException('Round with these details already exist');
           }
         }
-        throw error;
+
+        if(error instanceof PrismaClientValidationError){
+          throw new BadRequestException("Data format provided is not valid!")
+        }
+
+        throw new InternalServerErrorException("Something went wrong");
       }
     }
   
@@ -290,8 +303,11 @@ import {
           if (error.code === 'P2025') {
             throw new BadRequestException('No Round with following id found');
           }
+          if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id");
+          }
         }
-        throw error;
+        throw new InternalServerErrorException("Something went Wrong");
       }
     }
   
@@ -316,6 +332,9 @@ import {
           }
           if (error.code === 'P2002') {
             throw new BadRequestException('Round with these details already exist');
+          }
+          if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id Provided");
           }
         }
         if (error instanceof PrismaClientValidationError) {
@@ -426,6 +445,45 @@ import {
       }
     }
   
+    @Post('/set/score/:id')
+    async setScoreSet(@Param('id') id:string,@Body('scoreA') scoreA:number,@Body('scoreB') scoreB:number){
+      scoreA = Number(scoreA);
+      scoreB = Number(scoreB);
+
+      if(!scoreA || !scoreB){
+        throw new BadRequestException("Invalid Scores");
+      }
+
+      try {
+        const result = await this.matchService.setScore(id,scoreA,scoreB);
+        return {
+          success:true,
+          message:"Updated Successfully"
+        }
+      } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+          if (error.code === 'P2025') {
+            throw new BadRequestException('No Round with the following id found');
+          }
+          if (error.code === 'P2002') {
+            throw new BadRequestException('Round with these details already exist');
+          }
+          if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id Provided");
+          }
+        }
+        if (error instanceof PrismaClientValidationError) {
+          throw new BadRequestException('Invalid data format');
+        }
+        throw new InternalServerErrorException("Something went wrong");
+      }
+
+
+      
+
+    }
+
+
     // Get the winner of round
     @Get('/round/winner/:id')
     async roundWinner(@Param('id') id: any) {
@@ -463,5 +521,6 @@ import {
         throw error;
       }
     }
+
   }
   

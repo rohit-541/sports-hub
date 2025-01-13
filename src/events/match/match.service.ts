@@ -348,8 +348,20 @@ export class MatchService {
   // Rounds
 
   // Create a round
-  async createRound(data: any) {
-    return this.prisma.round.create({ data });
+  async createRound(data: any,n:number) {
+    const result = await this.prisma.round.create({
+      data:data
+    })
+
+    for(let i = 0;i<n;i++){
+      const dto = {
+        name:`Set ${i}`,
+        roundId:result.id
+      }
+      await this.prisma.stages.create({
+        data:dto
+      });
+    }
   }
 
   // Delete a round
@@ -371,16 +383,112 @@ export class MatchService {
 
   // Get details of a round
   async roundDetails(roundId: any) {
-    return this.prisma.round.findUnique({
+    const round = await this.prisma.round.findUnique({
       where: { id: roundId },
+      select:{
+        Stages:{
+          select:{
+            name:true,
+            scoreA:true,
+            scoreB:true
+          }
+        },
+        scoreA:true,
+        scoreB:true,
+        name:true,
+        Match:{
+          select:{
+            team1:{
+              select:{
+                hostel:{
+                  select:{
+                    hostelName:true,
+                  }
+                }
+              }
+            },
+            team2:{
+              select:{
+                hostel:{
+                  select:{
+                    hostelName:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
+
+    return {
+      name:round.name,
+      Sets:round.Stages.map((set)=>({
+        name:set.name,
+        scoreA:set.scoreA,
+        scoreB:set.scoreB,
+      })),
+      scoreA:round.scoreA,
+      scoreB:round.scoreB,
+      TeamA:round.Match?.team1?.hostel?.hostelName,
+      TeamB:round.Match?.team2?.hostel?.hostelName,
+    }
+
   }
 
   // Get all rounds for a match
   async allRounds(matchId: any) {
-    return this.prisma.round.findMany({
+    const result = await this.prisma.round.findMany({
       where: { matchId: matchId },
+      select:{
+        Stages:{
+          select:{
+            name:true,
+            scoreA:true,
+            scoreB:true
+          }
+        },
+        scoreA:true,
+        scoreB:true,
+        name:true,
+        Match:{
+          select:{
+            team1:{
+              select:{
+                hostel:{
+                  select:{
+                    hostelName:true,
+                  }
+                }
+              }
+            },
+            team2:{
+              select:{
+                hostel:{
+                  select:{
+                    hostelName:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
+
+    return  result.map((round)=>({
+      name:round.name,
+      Sets:round.Stages.map((set)=>({
+        name:set.name,
+        scoreA:set.scoreA,
+        scoreB:set.scoreB,
+      })),
+      scoreA:round.scoreA,
+      scoreB:round.scoreB,
+      TeamA:round.Match?.team1?.hostel?.hostelName,
+      TeamB:round.Match?.team2?.hostel?.hostelName,
+    
+    }));
   }
 
   // Set the winner of round
@@ -399,6 +507,20 @@ export class MatchService {
     const result = await this.prisma.round.update({
       where: { id: roundId },
       data: scoreData,
+    });
+    return result;
+  }
+
+  //Set the Set Scores(Set the scores of internal sets)
+  async setScore(stageId:string,scoreA:number,scoreB:number){
+    const result = await this.prisma.stages.update({
+      where:{
+        id:stageId
+      },
+      data:{
+        scoreA:scoreA,
+        scoreB:scoreB
+      }
     });
     return result;
   }
@@ -453,4 +575,5 @@ export class MatchService {
 
     return [...result, ...result2];
   }
+
 }
