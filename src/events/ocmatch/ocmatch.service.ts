@@ -86,7 +86,7 @@ export class OcmatchService {
     const result = await this.prisma.oCMatch.update({
       where: { id: matchId },
       data: {
-        ocMatchWinners: {
+        winners: {
           set: winnerIds.map((wid: any) => ({ id: wid })),
         },
       },
@@ -100,7 +100,7 @@ export class OcmatchService {
     const result = await this.prisma.oCMatch.update({
       where: { id: matchId },
       data: {
-        ocMatchWinners: {
+        winners: {
           disconnect: [{ id: winnerId }],
         },
       },
@@ -149,7 +149,7 @@ export class OcmatchService {
     const result = await this.prisma.oCMatch.findUnique({
       where: { id: matchId },
       select: {
-        ocMatchTeams: {
+        teams: {
           // select: {
           //   : true, // not in your schema, but kept for consistency
           //   hostel: true,

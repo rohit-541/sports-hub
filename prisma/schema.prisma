@@ -7,175 +7,128 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ------------------------
-//       USER
-// ------------------------
+//User Model
+//Each User is associated with a team 
 model User {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  kerbros String @unique
-  name    String
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  kerbros     String    @unique
+  name        String
+  hostelId    String    @db.ObjectId
+  teamId      String?   @db.ObjectId
 
-  // M2M with Team => replaced by join model: UserOnTeam
-  userTeams UserOnTeam[]
-
-  // If there are other 1:n or n:1 relations, keep them here
+  //Relations
+  Hostel      Hostel    @relation(fields: [hostelId],references: [id])
+  userTeams   Team?     @relation(fields: [teamId],references: [id])
 }
 
-// ------------------------
-//       HOSTEL
-// ------------------------
+//Hostel Model
 model Hostel {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
-  hostelName Hostels     @unique
-  points     Int         @default(0)
-  GamePoints GamePoint[]
-
-  // 1 -> n with Team
-  // "teams: Team[] @relation("HostelTeam")" was many-to-one, which is allowed.
-  teams Team[] @relation("HostelTeam")
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  hostelName    Hostels       @unique
+  points        Int           @default(0)
+  GamePoints    GamePoint[]
+  Users         User[]     
+  teams         Team[]        @relation("HostelTeam")
 }
 
-// ------------------------
-//       TEAM
-// ------------------------
+//Teams Model
+//Each team is Associated by a Hostel 
+//Has arrays of Users 
 model Team {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
-  hostelId   String
-  sport      Sports
-  sportsType sportType?
-  rank       Int?
-  score      Int? // To count matches won by them in category
+  id                  String      @id @default(auto()) @map("_id") @db.ObjectId
+  hostelId            String      @db.ObjectId
+  sport               Sports
+  sportsType          sportType?
+  rank                Int?     //Can Change later
+  scores              Int?     //Can Change later
+  Players             User[]
+  CategeoryIds        String[]      @db.ObjectId
+  Categeorys          Categeory[]   @relation(fields: [CategeoryIds],references: [id])
+  OcMatchIds          String[]      @db.ObjectId
+  ocMatchwins         String[]      @db.ObjectId
 
-  // 1 -> n or n -> 1 with Hostel
-  hostel Hostel @relation("HostelTeam", fields: [hostelId], references: [id])
+  //Relations
+  hostel              Hostel      @relation("HostelTeam", fields: [hostelId], references: [id])
 
-  // Replaces "players: User[]" with the explicit join model
-  userTeams UserOnTeam[]
+  //Normal Games Realtions
+  matches1            Match[]     @relation("Team1")
+  matches2            Match[]     @relation("Team2")
+  winner              Match[]     @relation("WinnerTeam")
 
-  // Many-to-many with Categeory (two different relations: "PoolTeam" & "poolWinner")
-  // replaced by join models:
-  poolCategeories   TeamOnPool[] // For "PoolTeam"
-  winnerCategeories TeamOnWinner[] // For "poolWinner"
+  //Rounds
+  rounds              Round[]
+  //Stages of round
+  winners             Stages[]
 
-  // 1 -> n with Match for "team1" and "team2"
-  matches1 Match[] @relation("Team1")
-  matches2 Match[] @relation("Team2")
-
-  // 1 -> n with Match for "winner"
-  winner Match[] @relation("WinnerTeam")
-
-  // 1 -> n with Round for "winner"
-  rounds Round[]
-
-  // 1 -> 1 or n -> 1 with OCMatch (ocMatchId is the foreign key)
-  ocMatchId String?
-  ocMatch   OCMatch? @relation(fields: [ocMatchId], references: [id])
-
-  // Many-to-many with OCMatch (for "teams" => OCMatchOnTeam, for "winners" => OCMatchWinners)
-  ocMatchTeams   OCMatchOnTeam[]
-  ocMatchWinners OCMatchWinners[]
-
+  //Match counter
+  matchTally          matchTally[]
+  OcMatch             OCMatch[]     @relation("TeamOcMatch",fields: [OcMatchIds],references: [id])     
+  OcMatchWinner       OCMatch[]     @relation("winnerOcMatch",fields: [ocMatchwins],references: [id])
   @@unique([sport, hostelId])
 }
 
-// ------------------------
-//       USER <--> TEAM
-//       (Join Model)
-// ------------------------
-model UserOnTeam {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String
-  teamId String
-
-  user User @relation(fields: [userId], references: [id])
-  team Team @relation(fields: [teamId], references: [id])
-}
-
-// ------------------------
-//      GAME POINT
-// ------------------------
+//GamePoint Model
 model GamePoint {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  name   Sports
-  points Int    @default(0)
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        Sports
+  points      Int       @default(0)
+  hostelId    String    @db.ObjectId
 
-  hostelId String
-  Hostel   Hostel @relation(fields: [hostelId], references: [id])
+  //Relations
+  Hostel      Hostel    @relation(fields: [hostelId], references: [id])
 }
 
-// ------------------------
-//      CATEGEORY
-// ------------------------
+model matchTally{
+  id            String        @id   @default(auto()) @map("_id")  @db.ObjectId
+  categeoryId   String        @db.ObjectId
+  teamId        String        @db.ObjectId
+  matchPlayer   Int
+  matchWon      Int
+  TotalMatch    Int  
+
+  //Relations
+  Team          Team          @relation(fields: [teamId],references: [id])
+  Categeory     Categeory     @relation(fields: [categeoryId],references: [id])
+}
+
+//Categeory Model
 model Categeory {
-  id    String    @id @default(auto()) @map("_id") @db.ObjectId
-  name  MatchType
-  sport Sports
-
-  // Instead of "teams: Team[] @relation("PoolTeam")"
-  // we now have a join model `TeamOnPool`.
-  // Instead of "winners: Team[] @relation("poolWinner")"
-  // we now have a join model `TeamOnWinner`.
-  poolTeams   TeamOnPool[]
-  winnerTeams TeamOnWinner[]
-
-  matches Match[]
-
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          MatchType
+  sport         Sports
+  matches       Match[]
+  teamIds       String[]    @db.ObjectId
+  teams         Team[]      @relation(fields: [teamIds],references: [id])//Relationship between pool and teams(All)
+  MatchesResult matchTally[]
+  
   @@unique([sport, name])
 }
 
-// ------------------------
-//  TEAM <--> CATEGEORY
-//   (Join Model #1: Pool)
-// ------------------------
-model TeamOnPool {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  teamId      String
-  categeoryId String
-
-  team      Team      @relation(fields: [teamId], references: [id])
-  categeory Categeory @relation(fields: [categeoryId], references: [id])
-}
-
-// ------------------------
-//  TEAM <--> CATEGEORY
-//   (Join Model #2: Winner)
-// ------------------------
-model TeamOnWinner {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  teamId      String
-  categeoryId String
-
-  team      Team      @relation(fields: [teamId], references: [id])
-  categeory Categeory @relation(fields: [categeoryId], references: [id])
-}
-
-// ------------------------
-//      MATCH
-// ------------------------
+//match Model
 model Match {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
 
   // Teams
-  team1Id String
-  team2Id String
+  team1Id       String        @db.ObjectId
+  team2Id       String        @db.ObjectId
 
   // Category
-  CategeoryID String
-  type        MatchType
+  CategeoryID   String        @db.ObjectId
+  type          MatchType
 
   // Sports
-  sport     Sports
-  sportType sportType?
+  sport         Sports
+  sportType     sportType?
 
   // Winner
-  winnerId String?
+  winnerId      String?       @db.ObjectId
 
   // Scores
-  scoreA Int? @default(0)
-  scoreB Int? @default(0)
+  scoreA        Int?          @default(0)
+  scoreB        Int?          @default(0)
 
   // Status
-  status MatchStatus @default(Scheduled)
+  status        MatchStatus   @default(Scheduled)
 
   // Dates
   dateStart DateTime
@@ -187,84 +140,64 @@ model Match {
   location  String @default("Cricket Ground")
 
   // Rounds
-  rounds Round[]
+  rounds    Round[]
 
   // Relations
-  team1  Team      @relation("Team1", fields: [team1Id], references: [id])
-  team2  Team      @relation("Team2", fields: [team2Id], references: [id])
-  winner Team?     @relation("WinnerTeam", fields: [winnerId], references: [id])
-  pool   Categeory @relation(fields: [CategeoryID], references: [id])
+  team1     Team      @relation("Team1", fields: [team1Id], references: [id])
+  team2     Team      @relation("Team2", fields: [team2Id], references: [id])
+  winner    Team?     @relation("WinnerTeam", fields: [winnerId], references: [id])
+  pool      Categeory @relation(fields: [CategeoryID], references: [id])
 }
 
-// ------------------------
-//       ROUND
-// ------------------------
+//Round Model
 model Round {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  name    String
-  matchId String
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String    
+  matchId   String    @db.ObjectId
 
-  scoreA   Int?
-  scoreB   Int?
-  winnerId String?
-
+  scoreA    Int?
+  scoreB    Int?
+  winnerId  String?    @db.ObjectId
+  Stages    Stages[]
   // Relations
-  Match  Match? @relation(fields: [matchId], references: [id])
-  winner Team?  @relation(fields: [winnerId], references: [id])
+  Match     Match?     @relation(fields: [matchId], references: [id])
+  winner    Team?      @relation(fields: [winnerId], references: [id])
 
   @@unique([name, matchId])
 }
 
-// ------------------------
-//      OCMatch
-// ------------------------
+//Stages of Round
+model Stages{
+  id                String      @id     @default(auto())    @map("_id") @db.ObjectId
+  name              String
+  scoreA            Int 
+  scoreB            Int
+  roundId           String      @db.ObjectId
+  winnerId          String      @db.ObjectId        
+
+  winner            Team        @relation(fields: [winnerId],references: [id])
+  Round             Round       @relation(fields: [roundId],references: [id])
+}
+
 model OCMatch {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  sport     Sports
-  sportType sportType?
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  sport         Sports
+  sportType     sportType?
+  teamIds       String[]    @db.ObjectId
+  winnerIds     String[]    @db.ObjectId
 
-  // Instead of "teams: Team[]" => Join model
-  ocMatchTeams OCMatchOnTeam[]
-
-  // Instead of "winners: Team[]" => Join model
-  ocMatchWinners OCMatchWinners[]
+  teams         Team[]      @relation("TeamOcMatch",fields: [teamIds],references: [id])
+  winners       Team[]      @relation("winnerOcMatch",fields: [winnerIds],references: [id])
 
   // Status and Dates
-  status    MatchStatus @default(Scheduled)
-  dateStart DateTime
-  dateEnd   DateTime
+  status        MatchStatus @default(Scheduled)
+  dateStart     DateTime
+  dateEnd       DateTime
 
   // Venue Details
-  latitude  Float? @default(28.5444201360911)
-  longitude Float? @default(77.18893289553354)
-  location  String @default("Cricket Ground")
-  Team      Team[]
-}
-
-// ------------------------
-//  OCMatch <--> Team
-//   (Join Model #1: teams)
-// ------------------------
-model OCMatchOnTeam {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  ocMatchId String
-  teamId    String
-
-  ocMatch OCMatch @relation(fields: [ocMatchId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id])
-}
-
-// ------------------------
-//  OCMatch <--> Team
-//   (Join Model #2: winners)
-// ------------------------
-model OCMatchWinners {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  ocMatchId String
-  teamId    String
-
-  ocMatch OCMatch @relation(fields: [ocMatchId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id])
+  latitude      Float?    @default(28.5444201360911)
+  longitude     Float?    @default(77.18893289553354)
+  location      String    @default("Cricket Ground")
 }
 
 // ------------------------

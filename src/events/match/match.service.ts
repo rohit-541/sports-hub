@@ -46,7 +46,7 @@ export class MatchService {
             },
             // In your schema, there's no direct `players` field on Team, 
             // but we're keeping this for backward-compatibility:
-            userTeams: true, 
+            Players: true, 
           },
         },
         team2: {
@@ -56,7 +56,7 @@ export class MatchService {
                 hostelName: true,
               },
             },
-            userTeams: true, 
+            Players: true, 
           },
         },
         status: true,
@@ -93,8 +93,8 @@ export class MatchService {
       teamB: result.team2?.hostel?.hostelName,
       winner: result.winner?.hostel?.hostelName,
       venue: result.location,
-      players1: result.team1?.userTeams,
-      players2: result.team2?.userTeams,
+      players1: result.team1?.Players,
+      players2: result.team2?.Players,
       score: `${result.scoreA} - ${result.scoreB}`,
       rounds: result.rounds.map((round: any) => ({
         name: round.name,

@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { sportType } from '@prisma/client';
+import { error } from 'console';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -10,20 +12,19 @@ export class TeamsService {
     // e.g. data: { poolId, hostelId, sport, ... }
     const { poolId, ...otherData } = data;
 
-    // Convert poolId from number -> string if needed
-    const poolIdString = String(poolId); // matches your `id: String` in Prisma
-
     const newTeam = await this.prisma.team.create({
-      data: {
-        // "pools" is a many-to-many or one-to-many in your original code.
-        // In the updated Mongo schema, you might have an explicit join or direct relation.
-        // Assuming 'pools' is a relation to Categeory or something similar:
-        pools: {
-          connect: [{ id: poolIdString }],
+      data:{
+        Categeorys:{
+          connect:[
+            {
+              id:poolId
+            }
+          ]
         },
-        ...otherData,
-      },
-    });
+        ...otherData
+      }
+     
+    },);
     return newTeam;
   };
 
@@ -44,7 +45,7 @@ export class TeamsService {
     const updateTeam = await this.prisma.team.update({
       where: { id: teamId },
       data: {
-        score: newScore,
+        scores: newScore,
       },
     });
     return updateTeam;
@@ -76,32 +77,45 @@ export class TeamsService {
   allTeams = async () => {
     const result = await this.prisma.team.findMany({
       select: {
-        hostel: true,
+        id:true,
+        hostel: {
+          select:{
+            hostelName:true
+          }
+        },
         sport: true,
         sportsType: true,
-        // In the new schema, "players" is replaced by "userTeams" or is a join model
-        // But you said "don't change functionality," so we keep "players" if your schema still has it.
-        // If you truly removed players from Team, you'd need to adapt. 
-        // We'll assume "players" is still a valid field (maybe from an older schema).
-        userTeams: true,
+        Players: true,
       },
     });
-    return result;
+    
+    const resultDTO = result.map((team)=>({
+      id:team.id,
+      team:team.hostel?.hostelName,
+      sport:team.sport,
+      sportType:team.sportsType
+    }))
+    return resultDTO;
   };
 
   // Players
 
   // Add player
   addPlayer = async (teamId: any, playerId: any) => {
+
     const result = await this.prisma.team.update({
       where: { id: teamId },
       data: {
-        userTeams: {
-          connect: [{ id: playerId }],
-        },
+        Players:{
+          connect:[
+            {
+              id:playerId
+            }
+          ]
+        }
       },
       select: {
-        userTeams: true,
+        Players: true,
       },
     });
 
@@ -117,12 +131,12 @@ export class TeamsService {
     const result = await this.prisma.team.update({
       where: { id: teamId },
       data: {
-        userTeams: {
+        Players: {
           disconnect: [{ id: playerId }],
         },
       },
       select: {
-        userTeams: true,
+        Players: true,
       },
     });
 
@@ -138,7 +152,7 @@ export class TeamsService {
     const result = await this.prisma.team.findUnique({
       where: { id: teamId },
       select: {
-        userTeams: true,
+        Players: true,
       },
     });
     return result;

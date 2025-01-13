@@ -21,7 +21,8 @@ import {
   @Controller('teams')
   export class TeamsController {
     constructor(private readonly teamsService: TeamsService) {}
-  
+    
+    //Create a Team
     @Post('/create')
     async createTeam(@Body() data: teamDto) {
       try {
@@ -29,26 +30,30 @@ import {
         data.poolId = data.poolId;
   
         // If "data.hostelId" is numeric, convert to string
-        data.hostelId = (data.hostelId);
+        data.hostelId = String(data.hostelId);
   
         // etc. for any other numeric IDs
         const newTeam = await this.teamsService.createTeam(data);
         return newTeam;
       } catch (error) {
-        console.log(error);
         if (error instanceof PrismaClientKnownRequestError) {
           if (error.code === 'P2003') {
             throw new BadRequestException('Hostel Does not exist');
+          }else if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id Provided");
+          }else if(error.code == "P2025"){
+            throw new BadRequestException("Data do not exists");
           }
           throw new BadRequestException('Cannot add duplicate Team');
         }
         if (error instanceof PrismaClientValidationError) {
-          console.log(error);
           throw new BadRequestException('Invalid Team data');
-        }
       }
+      throw error;
+     } 
     }
-  
+
+
     // Delete a team
     @Delete('/:id')
     async deleteTeam(@Param() data: any) {
@@ -91,6 +96,7 @@ import {
           updatedTeam: updatedTeam,
         };
       } catch (error) {
+        console.log(error)
         if (error instanceof PrismaClientKnownRequestError) {
           if (error.code === 'P2002') {
             throw new BadRequestException('Cannot add duplicate Team');
@@ -98,12 +104,14 @@ import {
             throw new BadRequestException('Team with this id not found');
           } else if (error.code === 'P2003') {
             throw new BadRequestException('Hostel with this id not found');
+          }else if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id");
           }
         }
         if (error instanceof PrismaClientValidationError) {
           throw new BadRequestException('Invalid Team data');
         }
-        console.log(error.code);
+  
         throw error;
       }
     }
@@ -195,14 +203,20 @@ import {
         return updatedTeam;
       } catch (error) {
         if (error instanceof PrismaClientKnownRequestError) {
-          if (error.code === 'P2025') {
-            throw new BadRequestException('Player with this ID not found');
+          if (error.code === 'P2003') {
+            throw new BadRequestException('Player Does not exist');
+          }else if(error.code == "P2023"){
+            throw new BadRequestException("Invalid Id Provided");
+          }else if(error.code == "P2025"){
+            throw new BadRequestException("Data do not exists");
           }
-          if (error.code === 'P2016') {
-            throw new BadRequestException('Team with this ID not found');
-          }
+          console.log(error);
+          throw new BadRequestException('Cannot add duplicate Player');
         }
-        throw error;
+        if (error instanceof PrismaClientValidationError) {
+          throw new BadRequestException('Invalid Player data');
+      }
+      throw error;
       }
     }
   
@@ -250,7 +264,7 @@ import {
       }
       return {
         success: true,
-        players: result.userTeams,
+        players: result.Players,
       };
     }
   }

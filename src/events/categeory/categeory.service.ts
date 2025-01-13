@@ -51,7 +51,7 @@ export class CategeoryService {
         sport: true,
         matches: true,
         winnerTeams: true,
-        poolTeams: true,
+        teams: true,
       },
     });
     return result;
@@ -110,7 +110,7 @@ export class CategeoryService {
         sport: sport,
       },
       select: {
-        poolTeams: true,
+        teams: true,
         matches: true,
       },
     });
@@ -124,7 +124,7 @@ export class CategeoryService {
         id: catId,
       },
       data: {
-        poolTeams: {
+        teams: {
           connect: [{ id: teamId }],
         },
       },
@@ -137,7 +137,7 @@ export class CategeoryService {
     const result = await this.prisma.categeory.findMany({
       select: {
         id: true,
-        poolTeams: {
+        teams: {
           select: {
             //  : {
             //   select: {
@@ -177,24 +177,24 @@ export class CategeoryService {
     });
 
     // Convert the result into a friendlier DTO
-    const resultDTO = result.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      sport: cat.sport,
-      // teams: cat.poolTeams.map((team) => ({
-      //   Hostel: team.hostel.hostelName,
-      //   Score: team.score,
-      // })),
-      Matches: cat.matches.map((match) => ({
-        teams: [
-          match.team1?.hostel?.hostelName,
-          match.team2?.hostel?.hostelName,
-        ],
-        scoreA: match.scoreA,
-        scoreB: match.scoreB,
-      })),
-    }));
+    // const resultDTO = result.map((cat) => ({
+    //   id: cat.id,
+    //   name: cat.name,
+    //   sport: cat.sport,
+    //   // teams: cat.poolTeams.map((team) => ({
+    //   //   Hostel: team.hostel.hostelName,
+    //   //   Score: team.score,
+    //   // })),
+    //   // Matches: cat.matches.map((match) => ({
+    //   //   teams: [
+    //   //     match.team1?.hostel?.hostelName,
+    //   //     match.team2?.hostel?.hostelName,
+    //   //   ],
+    //     scoreA: match.scoreA,
+    //     scoreB: match.scoreB,
+    //   })),
+    // }));
 
-    return resultDTO;
+    return result;
   }
 }

@@ -36,7 +36,7 @@ import {IsEmpty, IsNotEmpty, IsNumber, Min} from "class-validator";
 
 export class teamDto{
     @IsNotEmpty()
-    hostelId:number
+    hostelId:string
 
     @IsNotEmpty()
     sport:string

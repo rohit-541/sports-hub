@@ -19,9 +19,10 @@ import {
     @UseInterceptors(FileInterceptor('image'))
     @UsePipes(new ValidationPipe())
     @Post('/register')
-    async registerUser(@Body() data: userDTO) {
+    async registerUser(@Body() data: any) {
       try {
         // data is now basically an 'any' object
+        console.log(data);
         const newUser: any = await this.UserService.createUser(data);
         return newUser;
       } catch (error) {
