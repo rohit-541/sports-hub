@@ -50,7 +50,6 @@ export class CategeoryService {
         name: true,
         sport: true,
         matches: true,
-        winnerTeams: true,
         teams: true,
       },
     });

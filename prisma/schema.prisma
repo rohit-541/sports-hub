@@ -46,10 +46,11 @@ model Team {
   Categeorys          Categeory[]   @relation(fields: [CategeoryIds],references: [id])
   OcMatchIds          String[]      @db.ObjectId
   ocMatchwins         String[]      @db.ObjectId
+  CategeoryWinIds     String[]      @db.ObjectId
 
   //Relations
   hostel              Hostel      @relation("HostelTeam", fields: [hostelId], references: [id])
-
+  CategeoryWins       Categeory[] @relation("Wins",fields: [CategeoryIds],references: [id])
   //Normal Games Realtions
   matches1            Match[]     @relation("Team1")
   matches2            Match[]     @relation("Team2")
@@ -71,11 +72,13 @@ model Team {
 model GamePoint {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        Sports
-  points      Int       @default(0)
-  hostelId    String    @db.ObjectId
+  points      Int        @default(0)
+  hostelId    String     @db.ObjectId 
 
   //Relations
   Hostel      Hostel    @relation(fields: [hostelId], references: [id])
+
+  @@unique([hostelId,name]) 
 }
 
 model matchTally{
@@ -98,6 +101,9 @@ model Categeory {
   sport         Sports
   matches       Match[]
   teamIds       String[]    @db.ObjectId
+  winnerIds     String[]    @db.ObjectId
+
+  winnerTeams   Team[]      @relation("Wins",fields: [winnerIds],references: [id])
   teams         Team[]      @relation(fields: [teamIds],references: [id])//Relationship between pool and teams(All)
   MatchesResult matchTally[]
   

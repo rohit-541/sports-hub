@@ -1,30 +1,52 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { CreateHostelDto, UpdateHostelDto } from './Data-Validation';
+import { CreateHostelDto, UpdateHostelDto, UpdateIndividualGameDto } from './Data-Validation';
+import { Sports } from '@prisma/client';
 
 @Injectable()
 export class HostelService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Create a new Hostel
-   */
+  //Array containing all Sports
+  Sports:{name:Sports}[] = [
+    { name: "Badminton" },
+    { name: "Cricket" },
+    { name: "Football" },
+    { name: "Chess" },
+    { name: "TT" },
+    { name: "Volleyball" },
+    { name: "Hockey" },
+    { name: "Athletics" },
+    { name: "Squash" },
+    { name: "Weightlifting" }
+  ];
+  
+  //Create a new Hostel
   async createHostel(data: CreateHostelDto) {
-    // In MongoDB, "id" is a string ObjectId behind the scenes
-    // We store the hostelName from "data.name"
-    return this.prisma.hostel.create({
+
+    //Create a New Hostel
+    const newHostel = await this.prisma.hostel.create({
       data: {
         hostelName: data.name,
-      },
+      }
     });
+
+    // Create GamePoint Objects for it 
+    this.Sports.forEach(async (sport)=>{
+      const result = await this.prisma.gamePoint.create({
+        data:{
+          name:sport.name,
+          hostelId:newHostel.id
+        }
+      });
+    });
+
+    return newHostel;
   }
 
-  /**
-   * Add or increment points for a given Hostel
-   */
+  //add total points to hostel
   async addPoints(hostelId: any, points: number) {
-    // "hostelId" is the string version of the Mongo ObjectId
-    // We'll increment the 'points' field by the given 'points'
+
     return this.prisma.hostel.update({
       where: { id: hostelId },
       data: {
@@ -35,9 +57,7 @@ export class HostelService {
     });
   }
 
-  /**
-   * Optional: Update a hostel’s name or points
-   */
+  //Update Hostel Details
   async updateHostel(hostelId: any, data: UpdateHostelDto) {
     return this.prisma.hostel.update({
       where: { id: hostelId },
@@ -49,4 +69,107 @@ export class HostelService {
       },
     });
   }
+
+    //add total points to hostel
+  async addGamePoint(hostelId: any, name:Sports,points: number) {
+
+    const result = this.prisma.gamePoint.update({
+      where: {
+        hostelId_name:{
+          hostelId:hostelId,
+          name:name
+        }
+      },
+      data: {
+        points: {
+          increment: points,
+        },
+      },
+    });
+    await this.addPoints(hostelId,points);
+
+    return result;
+  }
+
+    //Update gamePoints
+
+  async updateGame(hostelId:any,name:Sports,points:number){
+    const result = await this.prisma.gamePoint.update({
+      where:{
+        hostelId_name:{
+          hostelId:hostelId,
+          name:name
+        }
+      },
+      data:{
+        points:points
+      }
+    });
+    
+    return result;
+  }
+  
+  async allHostels(){
+    const result = await this.prisma.hostel.findMany({
+      orderBy:{
+        points:'desc'
+      }
+    });
+
+    return result;
+  }
+
+  async allHostelByGame(name:Sports){
+    const result = await this.prisma.gamePoint.findMany({
+      where:{
+        name:name
+      },
+      select:{
+        points:true,
+        Hostel:{
+          select:{
+            hostelName:true
+          }
+        }
+      },
+      orderBy:{
+        points:'desc'
+      }
+    });
+
+    return result;
+  }
+
+  async hostelDetails(hostelId:string){
+    console.log("Hi");
+    console.log(hostelId);
+    const result = await this.prisma.hostel.findUnique({
+      where:{
+        id:hostelId
+      },
+      select:{
+        hostelName:true,
+        points:true,
+        GamePoints:{
+          select:{
+            name:true,
+            points:true
+          }
+        }
+      }
+    });
+
+    const resultDTO = {
+      name:result.hostelName,
+      TotalPoints:result.points,
+      GamePoints:result.GamePoints.map((game)=>({
+        name:game.name,
+        points:game.points
+      }))
+    }
+
+    return resultDTO;
+  }
+
+
 }

@@ -443,7 +443,7 @@ export class MatchService {
     const result2 = await this.prisma.oCMatch.findMany({
       where: filter,
       include: {
-        Team: {
+        teams: {
           include: {
             hostel: true,
           },

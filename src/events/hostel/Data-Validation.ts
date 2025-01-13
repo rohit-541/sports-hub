@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Sports } from '@prisma/client';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateHostelDto {
   @IsString()
@@ -15,4 +16,15 @@ export class UpdateHostelDto {
   @IsNumber()
   @IsOptional()
   points?: number;
+}
+export class UpdateIndividualGameDto {
+  @IsString()
+  @IsNotEmpty()
+  name: Sports;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  points: number;
+
 }

@@ -39,7 +39,7 @@ export class OcmatchService {
     const result = await this.prisma.oCMatch.findUnique({
       where: { id: matchId },
       include: {
-        Team: {
+        teams: {
           select: {
             hostel: true,
           },
@@ -55,7 +55,7 @@ export class OcmatchService {
     const result = await this.prisma.oCMatch.update({
       where: { id: matchId },
       data: {
-        Team: {
+        teams: {
           set: teamIds.map((t: any) => ({ id: t })),
         },
       },
