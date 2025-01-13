@@ -58,16 +58,15 @@ export class CategeoryService {
 
   // Create/Update a Winner of Categeory
   async createWinner(catId: any, winners: any[]) {
-    // We keep winners as string[] for clarity; they represent team IDs
+  
     const result = await this.prisma.categeory.update({
       where: {
         id: catId,
       },
       data: {
         winnerTeams: {
-          // 'set' overwrites the existing array of winners
           set: winners.map((winnerId) => ({
-            id: winnerId, // In Mongo, Team ID is a string
+            id: winnerId,
           })),
         },
       },
@@ -77,9 +76,9 @@ export class CategeoryService {
       },
     });
 
-    // Update the score in the TeamsService for each winner
-    winners.forEach(async (winnerId, index) => {
-      await this.teamService.updateScore(winnerId, index * 100);
+    //TO-DO
+    winners.forEach((teamId)=>{
+      
     });
 
     return result;

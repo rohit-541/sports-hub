@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   Post,
   Put,
@@ -32,10 +33,9 @@ export class CategeoryController {
         throw new BadRequestException('Cannot add duplicate Categeory');
       }
       if (error instanceof PrismaClientValidationError) {
-        console.log(error);
         throw new BadRequestException('Invalid Categeory data');
       }
-      throw error;
+      throw new InternalServerErrorException("Something went wrong!");
     }
   }
 
@@ -59,8 +59,11 @@ export class CategeoryController {
         if (error.code === 'P2025') {
           throw new BadRequestException('No Categeory with this Id found');
         }
+        if(error.code == "P2023"){
+          throw new BadRequestException("Invalid Id");
+        }
       }
-      throw error;
+      throw new InternalServerErrorException("Something went wrong");
     }
   }
 
@@ -82,15 +85,19 @@ export class CategeoryController {
         if (error.code === 'P2025') {
           throw new BadRequestException('Categeory with this id not found');
         }
+        if(error.code == "P2023"){
+          throw new BadRequestException("Invalid Id");
+        }
       }
       if (error instanceof PrismaClientValidationError) {
         throw new BadRequestException('Invalid Structure of Data');
       }
-      throw error;
+
+      throw new InternalServerErrorException("Something went wrong");
     }
   }
 
-  // Categeory Details
+  //Categeory Details
   @Get('/:id')
   async categeoryDetails(@Param('id') id: any) {
     if (!id) {
@@ -148,13 +155,26 @@ export class CategeoryController {
 
     try {
       const result = await this.catService.createWinner(id, winners);
+      
       return {
         success: true,
         winners: result,
       };
+
     } catch (error) {
-      console.log(error);
-      throw error;
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new BadRequestException('Categeory with this id not found');
+        }
+        if(error.code == "P2023"){
+          throw new BadRequestException("Invalid Id");
+        }
+      }
+      if (error instanceof PrismaClientValidationError) {
+        throw new BadRequestException('Invalid Structure of Data');
+      }
+
+      throw new InternalServerErrorException("Something went wrong");
     }
   }
 

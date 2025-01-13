@@ -7,6 +7,9 @@ import { PrismaService } from 'src/prisma.service';
 export class TeamsService {
   constructor(private readonly prisma: PrismaService) {}
 
+
+  //CRUD Team
+
   // Create a team
   createTeam = async (data: any) => {
     // e.g. data: { poolId, hostelId, sport, ... }
@@ -98,6 +101,9 @@ export class TeamsService {
     return resultDTO;
   };
 
+
+
+
   // Players
 
   // Add player
@@ -155,6 +161,16 @@ export class TeamsService {
         Players: true,
       },
     });
-    return result;
+
+    if(!result){
+      return null;
+    }
+
+    const resultDTO = result.Players.map((player)=>({
+      id:player.id,
+      name:player.name,
+    }));
+
+    return resultDTO;
   };
 }

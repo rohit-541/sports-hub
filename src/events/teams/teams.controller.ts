@@ -4,6 +4,7 @@ import {
     Controller,
     Delete,
     Get,
+    InternalServerErrorException,
     Param,
     Post,
     Put,
@@ -22,6 +23,9 @@ import {
   export class TeamsController {
     constructor(private readonly teamsService: TeamsService) {}
     
+
+    //CRUD TEAM
+
     //Create a Team
     @Post('/create')
     async createTeam(@Body() data: teamDto) {
@@ -52,7 +56,6 @@ import {
       throw error;
      } 
     }
-
 
     // Delete a team
     @Delete('/:id')
@@ -134,12 +137,17 @@ import {
           team: team,
         };
       } catch (error) {
-        throw error;
+        if(error instanceof PrismaClientKnownRequestError){
+          throw new BadRequestException("Invalid Id");
+        }
+
+        throw new InternalServerErrorException("Something went wrong");
       }
     }
   
     @Get('/')
     async allTeams() {
+    
       try {
         const result = await this.teamsService.allTeams();
         return {
@@ -147,10 +155,12 @@ import {
           Teams: result,
         };
       } catch (error) {
-        throw error;
+        throw new InternalServerErrorException("Something went Wrong");
       }
     }
   
+
+    //SCORE
     @Put('/score/:id')
     async updateScore(@Body() data: any, @Param('id') id: any) {
       // parse the score as a number
@@ -180,8 +190,10 @@ import {
       }
     }
   
-    // Players
   
+    
+    // Players
+    //Details of Player
     @Post('/addPlayer/:id')
     async addPlayer(@Body() data: any, @Param() params: any) {
       // parse IDs as strings
@@ -257,15 +269,25 @@ import {
       if (!teamIdStr) {
         throw new BadRequestException('Invalid Team Id');
       }
-  
-      const result = await this.teamsService.allPlayers(teamIdStr);
-      if (!result) {
-        throw new BadRequestException('Team with this ID not found');
+   
+     try {
+        const result = await this.teamsService.allPlayers(teamIdStr);
+        if(!result){
+          throw new BadRequestException("No Team with this Id");
+        }
+
+        return {
+          success: true,
+          players: result,
+        };
+     } catch (error) {
+
+      if(error instanceof PrismaClientKnownRequestError){
+        throw new BadRequestException("Invalid Ids");
       }
-      return {
-        success: true,
-        players: result.Players,
-      };
+      throw error
+     }
     }
+
   }
   
