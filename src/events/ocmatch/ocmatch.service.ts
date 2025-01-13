@@ -38,15 +38,46 @@ export class OcmatchService {
   async matchDetails(matchId: any) {
     const result = await this.prisma.oCMatch.findUnique({
       where: { id: matchId },
-      include: {
+      select: {
         teams: {
           select: {
-            hostel: true,
+            hostel: {
+              select:{
+                hostelName:true
+              }
+            },
           },
         },
+        dateStart:true,
+        location:true,
+        id:true,
+        winners:{
+          select:{
+            hostel:{
+              select:{
+                hostelName:true,
+              },
+            },
+            sport:true,
+            sportsType:true,
+          }
+        }
       },
+      
     });
-    return result;
+
+    const resultDto = {
+      id:result.id,
+      teams:result.teams.map((team)=>(
+        team.hostel?.hostelName
+      )),
+      winner:result.winners.map((team)=>
+       team.hostel.hostelName
+      ),
+      date:result.dateStart,
+      location:result.location
+    }
+    return resultDto;
   }
 
   // Add a Team to OC Match

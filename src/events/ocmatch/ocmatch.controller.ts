@@ -7,18 +7,23 @@ import {
     Param,
     Post,
     Put,
+    UseGuards,
   } from '@nestjs/common';
   import { OcmatchService } from './ocmatch.service';
   import {
     PrismaClientKnownRequestError,
     PrismaClientValidationError,
   } from '@prisma/client/runtime/library';
+import { Role, Roles, RolesGuard } from 'src/user/roles.gaurd';
+import { AuthGuard } from 'src/Auth/auth.gaurd';
   
   @Controller('ocmatch')
   export class OcmatchController {
     constructor(private readonly matchService: OcmatchService) {}
   
     // Create an OC match
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Post('/')
     async createMatch(@Body() data: any) {
       try {
@@ -48,8 +53,10 @@ import {
         throw error;
       }
     }
-  
+
     // Delete an OCMatch
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Delete('/:id')
     async deleteMatch(@Param('id') id: any) {
       if (!id) {
@@ -71,6 +78,8 @@ import {
     }
   
     // Update an OC match
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Put('/:id')
     async updateMatch(@Body() data: any, @Param('id') id: any) {
       if (!id) {
@@ -111,6 +120,7 @@ import {
     }
   
     // Get Details of an OCMatch
+
     @Get('/:id')
     async matchDetails(@Param('id') id: any) {
       if (!id) {
@@ -132,6 +142,8 @@ import {
     }
   
     // Add a Team to OCMatch
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Post('/team/:id')
     async addTeams(@Param('id') id: any, @Body() data: any) {
       if (!id) {
@@ -164,6 +176,8 @@ import {
     }
   
     // Add Winners of an OCMatch
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Post('/winner/:id')
     async winnerTeam(@Param('id') id: any, @Body() data: any) {
       if (!id) {
@@ -195,6 +209,8 @@ import {
     }
   
     // Delete a Winner of an OCMatch
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard,RolesGuard)
     @Delete('/winner/:id')
     async deleteWinner(@Param('id') id: any, @Body() data: any) {
       if (!id) {
